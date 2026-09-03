@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle + ' | Mess & Hostel Portal' : 'Mess & Hostel Portal' %></title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/assets/css/style.css" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Top Universal Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid px-3 px-lg-4">
+            <div class="d-flex align-items-center gap-2">
+                <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+                <button type="button" class="btn btn-sm btn-outline-secondary sidebar-toggle-btn me-1" id="sidebarToggle" title="Toggle Navigation Menu">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+                <% } %>
+                <a class="navbar-brand d-flex align-items-center gap-2" href="/admin/dashboard">
+                    <div class="brand-icon">
+                        <i class="bi bi-buildings-fill"></i>
+                    </div>
+                    <span>Mess & Hostel Portal</span>
+                </a>
+            </div>
+
+            <!-- Navbar Actions -->
+            <div class="d-flex align-items-center gap-2 gap-md-3">
+                <!-- Dark / Light Theme Toggle -->
+                <button type="button" class="btn btn-sm btn-outline-secondary theme-toggle-btn rounded-pill px-3" id="themeToggleBtn" title="Toggle Dark / White Mode">
+                    <i class="bi bi-sun-fill text-warning" id="themeIcon"></i>
+                </button>
+
+                <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+                <!-- Admin Profile Badge -->
+                <div class="d-none d-sm-flex align-items-center gap-2 ps-2 border-start border-secondary border-opacity-25">
+                    <div class="user-avatar-sm">
+                        <i class="bi bi-shield-check text-primary"></i>
+                    </div>
+                    <div class="lh-1 text-start">
+                        <div class="small fw-bold text-truncate" style="max-width: 140px;"><%= currentUser.name || 'Administrator' %></div>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.65rem;">ADMIN</span>
+                    </div>
+                </div>
+
+                <!-- Quick Logout Button -->
+                <a href="/logout" class="btn btn-sm btn-outline-danger ms-1" title="Sign Out">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+                <% } %>
+            </div>
+        </div>
+    </nav>
+
+    <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+    <!-- App Wrapper with Pinned Sidebar -->
+    <div class="app-wrapper">
+        <%- include('sidebar') %>
+        <main class="main-content">
+            <div class="content-container">
+    <% } else { %>
+        <main class="flex-grow-1">
+    <% } %>
+
+    <% if (typeof flash !== 'undefined' && flash) { %>
+        <div class="alert alert-<%= flash.type %> alert-dismissible fade show border-0 shadow-sm rounded-3 mb-4" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-<%= flash.type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill' %> fs-5"></i>
+                <div><%= flash.message %></div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>

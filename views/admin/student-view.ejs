@@ -1,0 +1,183 @@
+<%- include('../layouts/header') %>
+
+<div class="mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+        <a href="/admin/students" class="btn btn-outline-secondary btn-sm mb-2">
+            <i class="bi bi-arrow-left me-1"></i> Back to Student Directory
+        </a>
+        <div class="d-flex align-items-center gap-2">
+            <h3 class="fw-bold text-dark mb-0"><%= student.name %></h3>
+            <span class="badge bg-primary-subtle text-primary font-monospace fs-6"><%= student.student_code %></span>
+            <% if (student.status === 'ACTIVE') { %>
+                <span class="badge bg-success">ACTIVE</span>
+            <% } else { %>
+                <span class="badge bg-secondary">INACTIVE</span>
+            <% } %>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/admin/student-edit/<%= student.id %>" class="btn btn-primary btn-sm shadow-sm fw-semibold">
+            <i class="bi bi-pencil me-1"></i> Edit Student
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Student Details Card -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+            <div class="card-header bg-primary text-white border-0 py-3 px-4">
+                <h5 class="fw-bold mb-0"><i class="bi bi-person-badge me-2"></i>Profile Information</h5>
+            </div>
+            <div class="card-body p-4">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between px-0 py-2">
+                        <span class="text-muted small">Student Code</span>
+                        <span class="font-monospace fw-bold text-primary"><%= student.student_code %></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-2">
+                        <span class="text-muted small">Full Name</span>
+                        <span class="fw-bold"><%= student.name %></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-2">
+                        <span class="text-muted small">Mobile Number</span>
+                        <span class="font-monospace"><%= student.mobile || '—' %></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-2">
+                        <span class="text-muted small">Joining Date</span>
+                        <span class="fw-semibold"><%= student.joining_date_formatted %></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-2">
+                        <span class="text-muted small">Mess Subscription</span>
+                        <% if (student.mess_status === 'ACTIVE') { %>
+                            <span class="badge bg-success-subtle text-success border">Active</span>
+                        <% } else { %>
+                            <span class="badge bg-secondary">Inactive</span>
+                        <% } %>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-2">
+                        <span class="text-muted small">Hostel Accommodation</span>
+                        <% if (student.hostel_status === 'ACTIVE') { %>
+                            <span class="badge bg-info-subtle text-info border">Active (Room: <%= student.room_no || 'Assigned' %>)</span>
+                        <% } else { %>
+                            <span class="badge bg-secondary">Not Applicable</span>
+                        <% } %>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0 py-2">
+                        <span class="text-muted small">Recurring Monthly Fee</span>
+                        <span class="fw-bold text-success font-monospace">
+                            <% if (student.monthly_fee !== null && student.monthly_fee !== undefined) { %>
+                                ₹<%= parseFloat(student.monthly_fee).toLocaleString('en-IN', { minimumFractionDigits: 2 }) %> <span class="badge bg-light text-muted border">Custom</span>
+                            <% } else { %>
+                                Standard Service Rate
+                            <% } %>
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Cycle Status Card -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+            <div class="card-header bg-success text-white border-0 py-3 px-4">
+                <h5 class="fw-bold mb-0"><i class="bi bi-calendar-check me-2"></i>Current Active Cycle</h5>
+            </div>
+            <div class="card-body p-4">
+                <% if (cycle) { %>
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span class="badge bg-light text-dark font-monospace fs-6 px-3 py-2 border">Cycle <%= cycle.cycle_number %></span>
+                        <div>
+                            <% if (cycle.status === 'OVERDUE') { %>
+                                <span class="badge bg-danger fs-6 px-3 py-2">OVERDUE</span>
+                            <% } else if (cycle.status === 'DUE') { %>
+                                <span class="badge bg-warning text-dark fs-6 px-3 py-2">DUE TODAY</span>
+                            <% } else if (cycle.status === 'PENDING_VERIFICATION') { %>
+                                <span class="badge bg-warning-subtle text-warning-emphasis border fs-6 px-3 py-2">PENDING REVIEW</span>
+                            <% } else { %>
+                                <span class="badge bg-primary-subtle text-primary border fs-6 px-3 py-2">UPCOMING</span>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-body-tertiary rounded-3 mb-3">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <span class="text-muted small d-block">Cycle Period:</span>
+                                <strong class="text-primary"><%= cycle.cycle_label %></strong>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted small d-block">Due Date:</span>
+                                <strong class="text-danger font-monospace"><%= cycle.due_date_formatted %></strong>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <span class="text-muted small d-block">Applicable Amount:</span>
+                                <strong class="text-success font-monospace fs-5"><%= cycle.amount_due_formatted %></strong>
+                            </div>
+                            <div class="col-6 mt-2">
+                                <span class="text-muted small d-block">Status Note:</span>
+                                <span class="fw-semibold text-secondary"><%= cycle.days_text %></span>
+                            </div>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <p class="text-muted">No active billing cycle found.</p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Allocations History Table -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="card-header bg-transparent border-0 pt-4 px-4 pb-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Payment Allocations Ledger (<%= allocations.length %>)</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Cycle</th>
+                    <th>Cycle Period</th>
+                    <th>Due Date</th>
+                    <th>Amount</th>
+                    <th>Service</th>
+                    <th>Method</th>
+                    <th>Paid Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (allocations && allocations.length > 0) { %>
+                    <% allocations.forEach(a => { %>
+                        <tr>
+                            <td><span class="badge bg-light text-dark font-monospace">Cycle <%= a.cycle_number %></span></td>
+                            <td class="small fw-semibold"><%= a.cycle_start_formatted %> → <%= a.cycle_end_formatted %></td>
+                            <td class="font-monospace text-muted small"><%= a.due_date_formatted %></td>
+                            <td class="fw-bold font-monospace text-success"><%= a.amount_formatted %></td>
+                            <td><span class="badge bg-body-tertiary text-dark border"><%= a.service_covered %></span></td>
+                            <td class="small font-monospace"><%= a.payment_method || '—' %></td>
+                            <td class="small text-muted"><%= a.paid_date_formatted %></td>
+                            <td>
+                                <% if (a.status === 'COMPLETED') { %>
+                                    <span class="badge bg-success text-white"><i class="bi bi-check-circle-fill me-1"></i>PAID</span>
+                                <% } else if (a.status === 'PENDING') { %>
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border">PENDING</span>
+                                <% } else { %>
+                                    <span class="badge bg-danger"><%= a.status %></span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">No historical payment allocations on record for this student.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('../layouts/footer') %>

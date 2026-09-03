@@ -1,0 +1,95 @@
+<%- include('../layouts/header') %>
+
+<div class="mb-4">
+    <a href="/admin/students" class="btn btn-outline-secondary btn-sm mb-3">
+        <i class="bi bi-arrow-left me-1"></i> Back to Student Directory
+    </a>
+    <h3 class="fw-bold text-dark mb-1">Add New Student</h3>
+    <p class="text-muted small">Manually enroll a student into the Mess & Hostel Management System</p>
+</div>
+
+<% if (errors && errors.length > 0) { %>
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4">
+        <ul class="mb-0 ps-3">
+            <% errors.forEach(err => { %><li><%= err %></li><% }); %>
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<% } %>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-primary text-white border-0 py-3 px-4">
+                <h5 class="fw-bold mb-0"><i class="bi bi-person-plus-fill me-2"></i>Student Enrollment Particulars</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="/admin/student-add">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label for="name" class="form-label fw-bold">Full Student Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="<%= typeof values !== 'undefined' ? values.name || '' : '' %>" required placeholder="e.g. Rahul Sharma">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="mobile" class="form-label fw-bold">Mobile Number (10 Digits)</label>
+                            <input type="tel" class="form-control" id="mobile" name="mobile" 
+                                   value="<%= typeof values !== 'undefined' ? values.mobile || '' : '' %>" placeholder="e.g. 9876543210" pattern="[0-9]{10}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="joining_date" class="form-label fw-bold">Joining Date (Anchors Fee Cycles) <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="joining_date" name="joining_date" 
+                                   value="<%= typeof values !== 'undefined' ? values.joining_date || '' : '' %>" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="mess_status" class="form-label fw-bold">Mess Subscription <span class="text-danger">*</span></label>
+                            <select class="form-select" id="mess_status" name="mess_status" required>
+                                <option value="ACTIVE">Active (Required)</option>
+                                <option value="INACTIVE">Inactive (No Mess)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="hostel_status" class="form-label fw-bold">Hostel Accommodation <span class="text-danger">*</span></label>
+                            <select class="form-select" id="hostel_status" name="hostel_status" required>
+                                <option value="NOT_APPLICABLE">Not Applicable (Day Scholar)</option>
+                                <option value="ACTIVE">Active (Resident)</option>
+                                <option value="INACTIVE">Inactive</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6" id="room_number_container" style="display: none;">
+                            <label for="room_no" class="form-label fw-bold">Room Number</label>
+                            <input type="text" class="form-control" id="room_no" name="room_no" 
+                                   value="<%= typeof values !== 'undefined' ? values.room_no || '' : '' %>" placeholder="e.g. Room 101">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="status" class="form-label fw-bold">Enrollment Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="ACTIVE" selected>Active</option>
+                                <option value="INACTIVE">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="/admin/students" class="btn btn-light border px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm">
+                            <i class="bi bi-check2-circle me-1"></i> Enroll & Create Student
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../layouts/footer') %>

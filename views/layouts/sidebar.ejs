@@ -1,0 +1,43 @@
+<!-- Pinned Collapsible Sidebar Component -->
+<aside class="sidebar" id="adminSidebar">
+    <div class="sidebar-header px-3 py-3 border-bottom border-secondary border-opacity-10 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-shield-lock-fill text-primary fs-5"></i>
+            <span class="fw-bold fs-6 sidebar-brand-text">Admin Panel</span>
+        </div>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Hub</span>
+    </div>
+
+    <div class="sidebar-nav py-3">
+        <div class="px-3 mb-2 text-uppercase text-muted" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">Navigation</div>
+
+        <ul class="nav flex-column">
+            <!-- Dashboard / Fee Cycles -->
+            <li class="nav-item">
+                <a href="/admin/dashboard" class="nav-link <%= typeof pageTitle !== 'undefined' && pageTitle.includes('Fee') ? 'active' : '' %>">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <!-- Student Directory -->
+            <li class="nav-item">
+                <a href="/admin/students" class="nav-link <%= typeof pageTitle !== 'undefined' && pageTitle.includes('Student') ? 'active' : '' %>">
+                    <i class="bi bi-people-fill"></i>
+                    <span>Student List</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="px-3 mt-4 mb-2 text-uppercase text-muted" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">Account</div>
+
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a href="/logout" class="nav-link text-danger">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</aside>

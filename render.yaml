@@ -1,33 +1,43 @@
+# Render.com Cloud Deployment Blueprint (Node.js + MySQL)
 services:
   - type: web
-    name: hostel-management-portal
-    runtime: docker
+    name: hostel-management-node
+    runtime: node
     plan: free
-    dockerfilePath: ./Dockerfile
+    buildCommand: npm install
+    startCommand: node server.js
     envVars:
+      - key: PORT
+        value: 8000
+      - key: HOST
+        value: 0.0.0.0
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
       - key: DB_HOST
         fromDatabase:
-          name: hostel-db
+          name: hostel-mysql-db
           property: host
       - key: DB_PORT
         fromDatabase:
-          name: hostel-db
+          name: hostel-mysql-db
           property: port
-      - key: DB_NAME
-        fromDatabase:
-          name: hostel-db
-          property: database
       - key: DB_USER
         fromDatabase:
-          name: hostel-db
+          name: hostel-mysql-db
           property: user
       - key: DB_PASS
         fromDatabase:
-          name: hostel-db
+          name: hostel-mysql-db
           property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: hostel-mysql-db
+          property: database
 
 databases:
-  - name: hostel-db
-    plan: free
+  - name: hostel-mysql-db
     databaseName: mess_hostel_db
-    user: hostel_user
+    user: mess_admin
+    plan: free

@@ -1,0 +1,139 @@
+<%- include('../layouts/header') %>
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Student Directory</h3>
+        <p class="text-muted small mb-0">Comprehensive directory of all enrolled students, services, room allocations, and recurring billing cycles</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/admin/student-add" class="btn btn-primary btn-sm shadow-sm fw-semibold">
+            <i class="bi bi-person-plus-fill me-1"></i> Add Student
+        </a>
+        <a href="/admin/export" class="btn btn-outline-secondary btn-sm fw-semibold">
+            <i class="bi bi-download me-1"></i> Export CSV
+        </a>
+    </div>
+</div>
+
+<!-- Filter Box -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4">
+        <form method="GET" action="/admin/students" class="row g-3 align-items-end">
+            <div class="col-12 col-md-3">
+                <label for="q" class="form-label fw-bold small text-muted">Search Student</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-body-tertiary"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" id="q" name="q" value="<%= filters.search %>" placeholder="Name, code, mobile...">
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="mess" class="form-label fw-bold small text-muted">Mess Status</label>
+                <select class="form-select" id="mess" name="mess">
+                    <option value="">All</option>
+                    <option value="ACTIVE" <%= filters.messFilter === 'ACTIVE' ? 'selected' : '' %>>Active</option>
+                    <option value="INACTIVE" <%= filters.messFilter === 'INACTIVE' ? 'selected' : '' %>>Inactive</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="hostel" class="form-label fw-bold small text-muted">Hostel Status</label>
+                <select class="form-select" id="hostel" name="hostel">
+                    <option value="">All</option>
+                    <option value="ACTIVE" <%= filters.hostelFilter === 'ACTIVE' ? 'selected' : '' %>>Active</option>
+                    <option value="INACTIVE" <%= filters.hostelFilter === 'INACTIVE' ? 'selected' : '' %>>Inactive</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="sort" class="form-label fw-bold small text-muted">Sort By</label>
+                <select class="form-select" id="sort" name="sort">
+                    <option value="date_asc" <%= filters.sort === 'date_asc' ? 'selected' : '' %>>Joining Date (Asc)</option>
+                    <option value="date_desc" <%= filters.sort === 'date_desc' ? 'selected' : '' %>>Joining Date (Desc)</option>
+                    <option value="name_asc" <%= filters.sort === 'name_asc' ? 'selected' : '' %>>Name (A → Z)</option>
+                    <option value="name_desc" <%= filters.sort === 'name_desc' ? 'selected' : '' %>>Name (Z → A)</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel me-1"></i> Filter</button>
+                <a href="/admin/students" class="btn btn-outline-secondary" title="Clear Filters"><i class="bi bi-x-circle"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Table Card -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-header bg-transparent border-0 pt-4 px-4 pb-3 d-flex align-items-center justify-content-between">
+        <h5 class="fw-bold mb-0">Enrolled Students (<%= students.length %>)</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Joining Date</th>
+                    <th>Services</th>
+                    <th>Room</th>
+                    <th>Active Cycle</th>
+                    <th>Fee Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (students && students.length > 0) { %>
+                    <% students.forEach(st => { %>
+                        <tr>
+                            <td class="font-monospace fw-bold text-primary"><%= st.student_code %></td>
+                            <td class="fw-semibold"><%= st.name %></td>
+                            <td class="font-monospace text-muted small"><%= st.mobile || '—' %></td>
+                            <td class="small text-muted"><%= st.joining_date_formatted %></td>
+                            <td>
+                                <% if (st.mess_status === 'ACTIVE') { %><span class="badge bg-primary-subtle text-primary border me-1">Mess</span><% } %>
+                                <% if (st.hostel_status === 'ACTIVE') { %><span class="badge bg-info-subtle text-info border">Hostel</span><% } %>
+                                <% if (st.mess_status !== 'ACTIVE' && st.hostel_status !== 'ACTIVE') { %><span class="badge bg-secondary">None</span><% } %>
+                            </td>
+                            <td><span class="badge bg-body-tertiary text-dark font-monospace border"><%= st.room_no || '—' %></span></td>
+                            <td>
+                                <% if (st.cycle) { %>
+                                    <span class="badge bg-light text-dark font-monospace">Cycle <%= st.cycle.cycle_number %></span>
+                                    <div class="small text-muted"><%= st.cycle.due_date_formatted %></div>
+                                <% } else { %>—<% } %>
+                            </td>
+                            <td>
+                                <% if (st.cycle) { %>
+                                    <% if (st.cycle.status === 'OVERDUE') { %>
+                                        <span class="badge bg-danger">OVERDUE</span>
+                                    <% } else if (st.cycle.status === 'DUE') { %>
+                                        <span class="badge bg-warning text-dark">DUE TODAY</span>
+                                    <% } else if (st.cycle.status === 'PENDING_VERIFICATION') { %>
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border">PENDING</span>
+                                    <% } else { %>
+                                        <span class="badge bg-success-subtle text-success border">UPCOMING</span>
+                                    <% } %>
+                                <% } else { %>—<% } %>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="/admin/student-view/<%= st.id %>" class="btn btn-outline-primary" title="View Profile">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="/admin/student-edit/<%= st.id %>" class="btn btn-outline-secondary" title="Edit Student">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="bi bi-person-x fs-1 d-block mb-2"></i>No students matching the selected filter criteria.
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('../layouts/footer') %>

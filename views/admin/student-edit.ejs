@@ -1,0 +1,179 @@
+<%- include('../layouts/header') %>
+
+<div class="mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+        <a href="/admin/students" class="btn btn-outline-secondary btn-sm mb-2">
+            <i class="bi bi-arrow-left me-1"></i> Back to Student Directory
+        </a>
+        <h3 class="fw-bold text-dark mb-1">Edit Student: <%= student.name %></h3>
+        <p class="text-muted small">Update student information, room allocation, custom monthly fee, or manage enrollment</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/admin/student-view/<%= student.id %>" class="btn btn-outline-primary btn-sm fw-semibold">
+            <i class="bi bi-eye me-1"></i> View Profile
+        </a>
+    </div>
+</div>
+
+<% if (errors && errors.length > 0) { %>
+    <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4">
+        <ul class="mb-0 ps-3">
+            <% errors.forEach(err => { %><li><%= err %></li><% }); %>
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<% } %>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Edit Details Card -->
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+            <div class="card-header bg-primary text-white border-0 py-3 px-4 d-flex align-items-center justify-content-between">
+                <h5 class="fw-bold mb-0"><i class="bi bi-pencil-square me-2"></i>Student Particulars</h5>
+                <span class="badge bg-white text-primary font-monospace"><%= student.student_code %></span>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="/admin/student-edit/<%= student.id %>">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="action" value="update_particulars">
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Student Code</label>
+                            <input type="text" class="form-control font-monospace bg-body-tertiary" value="<%= student.student_code %>" readonly>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="name" class="form-label fw-bold">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name" value="<%= student.name %>" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="mobile" class="form-label fw-bold">Mobile Number (10 Digits)</label>
+                            <input type="tel" class="form-control font-monospace" id="mobile" name="mobile" 
+                                   value="<%= student.mobile || '' %>" placeholder="e.g. 9876543210" pattern="[0-9]{10}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="joining_date" class="form-label fw-bold">Joining Date (Anchors Fee Cycles) <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control font-monospace" id="joining_date" name="joining_date" 
+                                   value="<%= student.joining_date_ymd %>" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="mess_status" class="form-label fw-bold">Mess Status</label>
+                            <select class="form-select" id="mess_status" name="mess_status" required>
+                                <option value="ACTIVE" <%= student.mess_status === 'ACTIVE' ? 'selected' : '' %>>Active</option>
+                                <option value="INACTIVE" <%= student.mess_status === 'INACTIVE' ? 'selected' : '' %>>Inactive</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="hostel_status" class="form-label fw-bold">Hostel Status</label>
+                            <select class="form-select" id="hostel_status" name="hostel_status" required>
+                                <option value="NOT_APPLICABLE" <%= student.hostel_status === 'NOT_APPLICABLE' ? 'selected' : '' %>>Not Applicable</option>
+                                <option value="ACTIVE" <%= student.hostel_status === 'ACTIVE' ? 'selected' : '' %>>Active</option>
+                                <option value="INACTIVE" <%= student.hostel_status === 'INACTIVE' ? 'selected' : '' %>>Inactive</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6" id="room_number_container" style="<%= student.hostel_status === 'ACTIVE' ? 'display: block;' : 'display: none;' %>">
+                            <label for="room_no" class="form-label fw-bold">Room Number</label>
+                            <input type="text" class="form-control" id="room_no" name="room_no" value="<%= student.room_no || '' %>">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="monthly_fee" class="form-label fw-bold">Custom Monthly Fee (₹)</label>
+                            <input type="number" step="0.01" class="form-control font-monospace fw-bold text-success" id="monthly_fee" name="monthly_fee" 
+                                   value="<%= student.monthly_fee !== null ? student.monthly_fee : '' %>" placeholder="Leave empty for standard rate">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="status" class="form-label fw-bold">Enrollment Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                <option value="ACTIVE" <%= student.status === 'ACTIVE' ? 'selected' : '' %>>Active</option>
+                                <option value="INACTIVE" <%= student.status === 'INACTIVE' ? 'selected' : '' %>>Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="openDeleteStudentModal('<%= student.id %>', '<%= student.student_code %>', '<%= student.name.replace(/'/g, "\\'") %>')">
+                            <i class="bi bi-trash3-fill me-1"></i> Delete / Dropout Student
+                        </button>
+
+                        <div class="d-flex gap-2">
+                            <a href="/admin/students" class="btn btn-light border px-4">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm">
+                                <i class="bi bi-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Permanently Delete / Drop Out Student -->
+<div class="modal fade" id="deleteStudentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <form method="POST" action="/admin/student-edit/<%= student.id %>">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="action" value="delete_student">
+                <input type="hidden" name="student_id" id="del_modal_student_id" value="<%= student.id %>">
+
+                <div class="modal-header bg-danger text-white border-0 py-3">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Delete / Drop Out Student</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-warning py-2 small mb-3">
+                        <i class="bi bi-shield-exclamation me-1"></i>
+                        <strong>Warning:</strong> This action permanently removes the student from the database, including login credentials and payment allocations.
+                    </div>
+                    <p class="text-secondary mb-3">
+                        Are you sure you want to permanently delete student:
+                        <br>
+                        <strong id="del_modal_student_name" class="fs-6 text-dark"><%= student.name %></strong>
+                        (<span id="del_modal_student_code" class="font-monospace text-primary fw-bold"><%= student.student_code %></span>)?
+                    </p>
+                    <div class="mb-3">
+                        <label for="dropout_reason" class="form-label fw-bold">Reason for Deletion / Dropout <span class="text-danger">*</span></label>
+                        <select class="form-select mb-2" onchange="document.getElementById('dropout_reason').value = this.value;">
+                            <option value="Student dropped out / discontinued course">Student dropped out / discontinued course</option>
+                            <option value="Completed course & vacated campus">Completed course & vacated campus</option>
+                            <option value="Transferred to other institution">Transferred to other institution</option>
+                            <option value="Disciplinary withdrawal">Disciplinary withdrawal</option>
+                            <option value="Duplicate or test entry removal">Duplicate or test entry removal</option>
+                        </select>
+                        <input type="text" class="form-control" id="dropout_reason" name="dropout_reason" 
+                               value="Student dropped out / discontinued course" required placeholder="Specify reason for audit logs">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3 pt-0">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger px-4 fw-semibold">
+                        <i class="bi bi-trash-fill me-1"></i> Confirm Permanent Deletion
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openDeleteStudentModal(studentId, studentCode, studentName) {
+    document.getElementById('del_modal_student_id').value = studentId;
+    document.getElementById('del_modal_student_code').textContent = studentCode;
+    document.getElementById('del_modal_student_name').textContent = studentName;
+
+    const modal = new bootstrap.Modal(document.getElementById('deleteStudentModal'));
+    modal.show();
+}
+</script>
+
+<%- include('../layouts/footer') %>

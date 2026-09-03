@@ -1,19 +1,20 @@
-FROM php:8.2-apache
+# Dockerfile for Node.js Express Mess & Hostel System
+FROM node:20-alpine
 
-# Install PDO MySQL and required PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql mysqli
+WORKDIR /usr/src/app
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Install dependencies
+COPY package*.json ./
+RUN npm ci --only=production
 
-# Copy project files to Apache root
-COPY . /var/www/html/
+# Copy application source code
+COPY . .
 
-# Set working directory & permissions
-WORKDIR /var/www/html
-RUN chown -R www-data:www-data /var/www/html
+# Environment Defaults
+ENV PORT=8000
+ENV HOST=0.0.0.0
+ENV NODE_ENV=production
 
-# Expose HTTP port
-EXPOSE 80
+EXPOSE 8000
 
-CMD ["apache2-foreground"]
+CMD ["node", "server.js"]
