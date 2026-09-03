@@ -1,13 +1,5 @@
-﻿# OS & Editor files
+﻿node_modules/
+.env
+*.log
 .DS_Store
 Thumbs.db
-.vscode/
-.idea/
-*.log
-
-# Firebase cache
-.firebase/
-
-# Temporary test scripts
-test_*.py
-scratch/
