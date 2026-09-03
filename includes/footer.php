@@ -22,5 +22,7 @@ $isLoggedIn = !empty($_SESSION['user_id']);
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <!-- Custom App JS -->
 <script src="/assets/js/app.js"></script>
+<!-- Firebase Modular SDK Integration -->
+<script type="module" src="/assets/js/firebase-module.js"></script>
 </body>
 </html>
