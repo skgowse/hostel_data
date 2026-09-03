@@ -5,6 +5,9 @@ Thumbs.db
 .idea/
 *.log
 
+# Firebase cache
+.firebase/
+
 # Temporary test scripts
 test_*.py
 scratch/
