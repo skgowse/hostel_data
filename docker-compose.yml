@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: hostel_app
+    restart: always
+    ports:
+      - "8000:80"
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: mess_hostel_db
+      DB_USER: hostel_user
+      DB_PASS: hostel_password
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:10.6
+    container_name: hostel_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mess_hostel_db
+      MYSQL_USER: hostel_user
+      MYSQL_PASSWORD: hostel_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/database.sql:/docker-entrypoint-initdb.d/1_schema.sql
+
+volumes:
+  db_data:

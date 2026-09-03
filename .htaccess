@@ -1,0 +1,15 @@
+# Enable Rewrite Engine
+RewriteEngine On
+RewriteBase /
+
+# Prevent Directory Browsing
+Options -Indexes
+
+# Protect Sensitive Configuration Files
+<FilesMatch "^(database\.sql|entries_.*\.xlsx|\.env|\.git.*|\.gitignore)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Set UTF-8
+AddDefaultCharset UTF-8

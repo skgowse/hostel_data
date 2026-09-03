@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: hostel-management-portal
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: hostel-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: hostel-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: hostel-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: hostel-db
+          property: user
+      - key: DB_PASS
+        fromDatabase:
+          name: hostel-db
+          property: password
+
+databases:
+  - name: hostel-db
+    plan: free
+    databaseName: mess_hostel_db
+    user: hostel_user
