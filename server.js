@@ -77,10 +77,14 @@ app.use((req, res) => {
 });
 
 // Start Server
-app.listen(PORT, HOST, () => {
-    console.log(`\n=============================================================`);
-    console.log(`🚀 Node.js Mess & Hostel Management System is live!`);
-    console.log(`🌐 Localhost PC:    http://127.0.0.1:${PORT}`);
-    console.log(`📱 Mobile Network:  http://192.168.29.40:${PORT}`);
-    console.log(`=============================================================\n`);
-});
+if (require.main === module) {
+    app.listen(PORT, HOST, () => {
+        console.log(`\n=============================================================`);
+        console.log(`🚀 Node.js Mess & Hostel Management System is live!`);
+        console.log(`🌐 Localhost PC:    http://127.0.0.1:${PORT}`);
+        console.log(`📱 Mobile Network:  http://192.168.29.40:${PORT}`);
+        console.log(`=============================================================\n`);
+    });
+}
+
+module.exports = app;
