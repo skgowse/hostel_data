@@ -8,7 +8,9 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'hostel-star';
+const firebaseConfig = require('./firebaseConfig');
+
+const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || firebaseConfig.projectId || 'hostel-data-star';
 
 // Check if a service account JSON file exists
 const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS || path.join(__dirname, '../serviceAccountKey.json');
@@ -266,5 +268,6 @@ const db = new FirestoreDatabaseWrapper();
 module.exports = {
     admin,
     db,
-    PROJECT_ID
+    PROJECT_ID,
+    firebaseConfig
 };
