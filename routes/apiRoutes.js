@@ -393,4 +393,96 @@ router.post(['/admin-payments', '/admin-payments.php'], async (req, res) => {
     return res.json({ success: false, message: 'Unknown action specified.' });
 });
 
+// -------------------------------------------------------------
+// 3. Student Directory Dynamic AJAX Filter Endpoint
+// -------------------------------------------------------------
+router.get(['/admin-students-filter', '/admin-students-filter.php'], async (req, res) => {
+    try {
+        const search = (req.query.q || '').trim().toLowerCase();
+        const messFilter = (req.query.mess || '').trim();
+        const hostelFilter = (req.query.hostel || '').trim();
+        const statusFilter = (req.query.status || '').trim();
+        const fromDate = (req.query.from_date || '').trim();
+        const toDate = (req.query.to_date || '').trim();
+        const sort = (req.query.sort || 'date_asc').trim();
+
+        const snap = await db.collection('students').get();
+        let students = [];
+        snap.forEach(doc => students.push(doc.data()));
+
+        if (search) {
+            students = students.filter(s =>
+                (s.name && s.name.toLowerCase().includes(search)) ||
+                (s.student_code && s.student_code.toLowerCase().includes(search)) ||
+                (s.mobile && s.mobile.includes(search))
+            );
+        }
+
+        if (messFilter) {
+            students = students.filter(s => s.mess_status === messFilter);
+        }
+
+        if (hostelFilter) {
+            students = students.filter(s => s.hostel_status === hostelFilter);
+        }
+
+        if (statusFilter) {
+            students = students.filter(s => s.status === statusFilter);
+        }
+
+        if (fromDate) {
+            students = students.filter(s => formatYmd(s.joining_date) >= fromDate);
+        }
+
+        if (toDate) {
+            students = students.filter(s => formatYmd(s.joining_date) <= toDate);
+        }
+
+        if (sort === 'date_desc') {
+            students.sort((a, b) => (formatYmd(b.joining_date) || '').localeCompare(formatYmd(a.joining_date) || '') || (b.id - a.id));
+        } else if (sort === 'name_asc') {
+            students.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        } else if (sort === 'name_desc') {
+            students.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+        } else {
+            students.sort((a, b) => (formatYmd(a.joining_date) || '').localeCompare(formatYmd(b.joining_date) || '') || (a.id - b.id));
+        }
+
+        const studentsWithCycles = [];
+        const today = formatYmd(new Date());
+
+        for (const st of students) {
+            const cycle = await getStudentCurrentCycle(st.id, today);
+            studentsWithCycles.push({
+                id: st.id,
+                student_code: st.student_code,
+                name: st.name,
+                mobile: st.mobile || '—',
+                room_no: st.room_no || '—',
+                mess_status: st.mess_status,
+                hostel_status: st.hostel_status,
+                status: st.status,
+                joining_date: formatYmd(st.joining_date),
+                joining_date_formatted: formatDisplayDate(st.joining_date),
+                cycle: cycle ? {
+                    cycle_number: cycle.cycle_number,
+                    due_date: cycle.due_date,
+                    due_date_formatted: cycle.due_date_formatted,
+                    status: cycle.status,
+                    status_label: cycle.status_label
+                } : null
+            });
+        }
+
+        res.json({
+            success: true,
+            total: studentsWithCycles.length,
+            students: studentsWithCycles
+        });
+    } catch (err) {
+        console.error('Firebase Student Directory Filter Error:', err);
+        res.status(500).json({ success: false, message: 'Server error processing student filter query.' });
+    }
+});
+
 module.exports = router;

@@ -43,5 +43,32 @@
     "description": "Admin directly recorded CASH payment of ₹2500.00 for A. Chandi (STU-00001) for Cycle 1 on 06-Sep-2026 in Firebase",
     "created_at": "2026-09-06T16:26:03.877Z",
     "id": "doc_1788711963877_6s2m0u"
+  },
+  "doc_1788711982850_ptqkr8": {
+    "admin_id": "1",
+    "action": "ADMIN_LOGIN",
+    "target_type": "USER",
+    "target_id": "1",
+    "description": "Admin logged in successfully via Firebase",
+    "created_at": "2026-09-06T16:26:22.850Z",
+    "id": "doc_1788711982850_ptqkr8"
+  },
+  "doc_1788712213131_lfyhlc": {
+    "admin_id": "1",
+    "action": "MANUAL_ADD_STUDENT",
+    "target_type": "STUDENT",
+    "target_id": "108",
+    "description": "Added student R.sohan (STU-00108) in Firebase",
+    "created_at": "2026-09-06T16:30:13.131Z",
+    "id": "doc_1788712213131_lfyhlc"
+  },
+  "doc_1788712422855_6o4d1h": {
+    "admin_id": "1",
+    "action": "ADMIN_LOGIN",
+    "target_type": "USER",
+    "target_id": "1",
+    "description": "Admin logged in successfully via Firebase",
+    "created_at": "2026-09-06T16:33:42.854Z",
+    "id": "doc_1788712422855_6o4d1h"
   }
 }

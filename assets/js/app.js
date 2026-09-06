@@ -509,37 +509,159 @@ document.addEventListener('DOMContentLoaded', function () {
             params.append('notes', notes);
             params.append('paid_date', paidDate);
 
-            fetch('/api/admin-payments', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params.toString()
-            })
+        fetch('/api/admin-payments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        })
+        .then(r => r.json())
+        .then(res => {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Confirm & Mark Completed';
+
+            const modalEl = document.getElementById('directPaymentModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+
+            if (res.success) {
+                alert(res.message);
+                if (typeof fetchFilteredStudents === 'function') {
+                    fetchFilteredStudents();
+                } else {
+                    window.location.reload();
+                }
+            } else {
+                alert('Error: ' + res.message);
+            }
+        })
+        .catch(() => {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Confirm & Mark Completed';
+            alert('Connection error recording payment.');
+        });
+    });
+}
+
+    // -------------------------------------------------------------
+    // 6. Student Directory Live AJAX Search & Dynamic Filter
+    // -------------------------------------------------------------
+    const dirSearchInput = document.getElementById('studentDirectorySearch');
+    const dirMessSelect = document.getElementById('mess');
+    const dirHostelSelect = document.getElementById('hostel');
+    const dirSortSelect = document.getElementById('sort');
+    const dirTableBody = document.getElementById('studentsDirectoryTableBody');
+    const dirCountBadge = document.getElementById('studentsDirectoryCount');
+    const dirSpinner = document.getElementById('studentsDirectorySpinner');
+    const dirFilterForm = document.getElementById('studentsDirectoryFilterForm');
+    const clearDirBtn = document.getElementById('clearDirectoryFiltersBtn');
+
+    function fetchDirectoryStudents() {
+        if (!dirTableBody) return;
+
+        const q = dirSearchInput ? dirSearchInput.value.trim() : '';
+        const mess = dirMessSelect ? dirMessSelect.value : '';
+        const hostel = dirHostelSelect ? dirHostelSelect.value : '';
+        const sort = dirSortSelect ? dirSortSelect.value : 'date_asc';
+
+        if (dirSpinner) dirSpinner.classList.remove('d-none');
+
+        const params = new URLSearchParams({ q, mess, hostel, sort });
+        fetch(`/api/admin-students-filter?${params.toString()}`)
             .then(r => r.json())
             .then(res => {
-                confirmBtn.disabled = false;
-                confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Confirm & Mark Completed';
-
-                const modalEl = document.getElementById('directPaymentModal');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                if (modal) modal.hide();
-
+                if (dirSpinner) dirSpinner.classList.add('d-none');
                 if (res.success) {
-                    alert(res.message);
-                    if (typeof fetchFilteredStudents === 'function') {
-                        fetchFilteredStudents();
+                    if (dirCountBadge) dirCountBadge.textContent = res.total;
+
+                    if (res.students && res.students.length > 0) {
+                        let html = '';
+                        res.students.forEach(st => {
+                            let servicesBadge = '';
+                            if (st.mess_status === 'ACTIVE') {
+                                servicesBadge += '<span class="badge bg-primary-subtle text-primary border me-1">Mess</span>';
+                            }
+                            if (st.hostel_status === 'ACTIVE') {
+                                servicesBadge += '<span class="badge bg-info-subtle text-info border">Hostel</span>';
+                            }
+                            if (st.mess_status !== 'ACTIVE' && st.hostel_status !== 'ACTIVE') {
+                                servicesBadge = '<span class="badge bg-secondary">None</span>';
+                            }
+
+                            let cycleHtml = '—';
+                            let feeStatusHtml = '—';
+                            if (st.cycle) {
+                                cycleHtml = `<span class="badge bg-light text-dark font-monospace">Cycle ${st.cycle.cycle_number}</span>
+                                             <div class="small text-muted">${escapeHtml(st.cycle.due_date_formatted)}</div>`;
+                                if (st.cycle.status === 'OVERDUE') {
+                                    feeStatusHtml = '<span class="badge bg-danger">OVERDUE</span>';
+                                } else if (st.cycle.status === 'DUE') {
+                                    feeStatusHtml = '<span class="badge bg-warning text-dark">DUE TODAY</span>';
+                                } else if (st.cycle.status === 'PENDING_VERIFICATION') {
+                                    feeStatusHtml = '<span class="badge bg-warning-subtle text-warning-emphasis border">PENDING</span>';
+                                } else {
+                                    feeStatusHtml = '<span class="badge bg-success-subtle text-success border">UPCOMING</span>';
+                                }
+                            }
+
+                            html += `<tr>
+                                <td class="font-monospace fw-bold text-primary">${escapeHtml(st.student_code)}</td>
+                                <td class="fw-semibold">${escapeHtml(st.name)}</td>
+                                <td class="font-monospace text-muted small">${escapeHtml(st.mobile || '—')}</td>
+                                <td class="small text-muted">${escapeHtml(st.joining_date_formatted)}</td>
+                                <td>${servicesBadge}</td>
+                                <td><span class="badge bg-body-tertiary text-dark font-monospace border">${escapeHtml(st.room_no || '—')}</span></td>
+                                <td>${cycleHtml}</td>
+                                <td>${feeStatusHtml}</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/admin/student-view/${st.id}" class="btn btn-outline-primary" title="View Profile">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="/admin/student-edit/${st.id}" class="btn btn-outline-secondary" title="Edit Student">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        });
+                        dirTableBody.innerHTML = html;
                     } else {
-                        window.location.reload();
+                        dirTableBody.innerHTML = `<tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                <i class="bi bi-person-x fs-1 d-block mb-2"></i>No students matching the selected filter criteria.
+                            </td>
+                        </tr>`;
                     }
-                } else {
-                    alert('Error: ' + res.message);
                 }
             })
             .catch(() => {
-                confirmBtn.disabled = false;
-                confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Confirm & Mark Completed';
-                alert('Connection error recording payment.');
+                if (dirSpinner) dirSpinner.classList.add('d-none');
             });
-        });
+    }
+
+    if (dirSearchInput && dirTableBody) {
+        dirSearchInput.addEventListener('input', debounce(fetchDirectoryStudents, 300));
+        if (dirMessSelect) dirMessSelect.addEventListener('change', fetchDirectoryStudents);
+        if (dirHostelSelect) dirHostelSelect.addEventListener('change', fetchDirectoryStudents);
+        if (dirSortSelect) dirSortSelect.addEventListener('change', fetchDirectoryStudents);
+
+        if (dirFilterForm) {
+            dirFilterForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                fetchDirectoryStudents();
+            });
+        }
+
+        if (clearDirBtn) {
+            clearDirBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (dirSearchInput) dirSearchInput.value = '';
+                if (dirMessSelect) dirMessSelect.value = '';
+                if (dirHostelSelect) dirHostelSelect.value = '';
+                if (dirSortSelect) dirSortSelect.value = 'date_asc';
+                fetchDirectoryStudents();
+            });
+        }
     }
 });
 

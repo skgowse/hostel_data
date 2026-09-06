@@ -18,12 +18,12 @@
 <!-- Filter Box -->
 <div class="card border-0 shadow-sm rounded-4 mb-4">
     <div class="card-body p-4">
-        <form method="GET" action="/admin/students" class="row g-3 align-items-end">
+        <form id="studentsDirectoryFilterForm" method="GET" action="/admin/students" class="row g-3 align-items-end">
             <div class="col-12 col-md-3">
-                <label for="q" class="form-label fw-bold small text-muted">Search Student</label>
+                <label for="studentDirectorySearch" class="form-label fw-bold small text-muted">Search Student</label>
                 <div class="input-group">
                     <span class="input-group-text bg-body-tertiary"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control" id="q" name="q" value="<%= filters.search %>" placeholder="Name, code, mobile...">
+                    <input type="text" class="form-control" id="studentDirectorySearch" name="q" value="<%= filters.search %>" placeholder="Type name, code, mobile...">
                 </div>
             </div>
             <div class="col-6 col-md-2">
@@ -53,7 +53,7 @@
             </div>
             <div class="col-6 col-md-3 d-flex gap-2">
                 <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel me-1"></i> Filter</button>
-                <a href="/admin/students" class="btn btn-outline-secondary" title="Clear Filters"><i class="bi bi-x-circle"></i></a>
+                <a href="/admin/students" id="clearDirectoryFiltersBtn" class="btn btn-outline-secondary" title="Clear Filters"><i class="bi bi-x-circle"></i></a>
             </div>
         </form>
     </div>
@@ -62,7 +62,9 @@
 <!-- Table Card -->
 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
     <div class="card-header bg-transparent border-0 pt-4 px-4 pb-3 d-flex align-items-center justify-content-between">
-        <h5 class="fw-bold mb-0">Enrolled Students (<%= students.length %>)</h5>
+        <h5 class="fw-bold mb-0">Enrolled Students (<span id="studentsDirectoryCount"><%= students.length %></span>)
+            <span id="studentsDirectorySpinner" class="spinner-border spinner-border-sm text-primary d-none ms-2" role="status"></span>
+        </h5>
     </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
@@ -79,7 +81,7 @@
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="studentsDirectoryTableBody">
                 <% if (students && students.length > 0) { %>
                     <% students.forEach(st => { %>
                         <tr>
