@@ -223,5 +223,149 @@
     "description": "Updated student details for A. Chandi (ID: 1) in Firebase",
     "created_at": "2026-09-06T17:21:16.035Z",
     "id": "doc_1788715276036_7hn4c8"
+  },
+  "doc_1788715499807_q1gsen": {
+    "admin_id": "1",
+    "action": "UPDATE_STUDENT_DETAILS",
+    "target_type": "STUDENT",
+    "target_id": "7",
+    "description": "Updated student details for B. Hemanth Kumar (ID: 7) in Firebase",
+    "created_at": "2026-09-06T17:24:59.807Z",
+    "id": "doc_1788715499807_q1gsen"
+  },
+  "doc_1788715519000_rqdp7v": {
+    "admin_id": "1",
+    "action": "UPDATE_STUDENT_DETAILS",
+    "target_type": "STUDENT",
+    "target_id": "15",
+    "description": "Updated student details for Ch. Desh Aditya (ID: 15) in Firebase",
+    "created_at": "2026-09-06T17:25:19.000Z",
+    "id": "doc_1788715519000_rqdp7v"
+  },
+  "doc_1788715536702_dek1zt": {
+    "admin_id": "1",
+    "action": "UPDATE_STUDENT_DETAILS",
+    "target_type": "STUDENT",
+    "target_id": "34",
+    "description": "Updated student details for J. Anil Kumar (ID: 34) in Firebase",
+    "created_at": "2026-09-06T17:25:36.701Z",
+    "id": "doc_1788715536702_dek1zt"
+  },
+  "doc_1788715569600_sdwq0o": {
+    "admin_id": "1",
+    "action": "UPDATE_STUDENT_DETAILS",
+    "target_type": "STUDENT",
+    "target_id": "12",
+    "description": "Updated student details for B. Sai Hemanth (ID: 12) in Firebase",
+    "created_at": "2026-09-06T17:26:09.599Z",
+    "id": "doc_1788715569600_sdwq0o"
+  },
+  "doc_1788715635063_6dnne1": {
+    "admin_id": "1",
+    "action": "DIRECT_PAYMENT_RECORDED",
+    "target_type": "STUDENT",
+    "target_id": "73",
+    "description": "Admin directly recorded CASH payment of ₹2500.00 for P. Vasu (STU-00073) for Cycle 1 on 06-Sep-2026 in Firebase",
+    "created_at": "2026-09-06T17:27:15.062Z",
+    "id": "doc_1788715635063_6dnne1"
+  },
+  "doc_1788715663087_spx0gi": {
+    "admin_id": "1",
+    "action": "DIRECT_PAYMENT_RECORDED",
+    "target_type": "STUDENT",
+    "target_id": "67",
+    "description": "Admin directly recorded CASH payment of ₹2500.00 for P. Manoj Kumar (STU-00067) for Cycle 1 on 06-Sep-2026 in Firebase",
+    "created_at": "2026-09-06T17:27:43.087Z",
+    "id": "doc_1788715663087_spx0gi"
+  },
+  "doc_1788715678959_49pm6l": {
+    "admin_id": "1",
+    "action": "DIRECT_PAYMENT_RECORDED",
+    "target_type": "STUDENT",
+    "target_id": "6",
+    "description": "Admin directly recorded CASH payment of ₹2500.00 for B. Harsha (STU-00006) for Cycle 1 on 06-Sep-2026 in Firebase",
+    "created_at": "2026-09-06T17:27:58.958Z",
+    "id": "doc_1788715678959_49pm6l"
+  },
+  "doc_1788715696947_d7redd": {
+    "admin_id": "1",
+    "action": "DIRECT_PAYMENT_RECORDED",
+    "target_type": "STUDENT",
+    "target_id": "14",
+    "description": "Admin directly recorded CASH payment of ₹2500.00 for Ch. Amar Kumar (STU-00014) for Cycle 1 on 06-Sep-2026 in Firebase",
+    "created_at": "2026-09-06T17:28:16.946Z",
+    "id": "doc_1788715696947_d7redd"
+  },
+  "doc_1788715711875_d67xri": {
+    "admin_id": "1",
+    "action": "DIRECT_PAYMENT_RECORDED",
+    "target_type": "STUDENT",
+    "target_id": "52",
+    "description": "Admin directly recorded CASH payment of ₹2500.00 for M. Santhosh Kumar (STU-00052) for Cycle 1 on 06-Sep-2026 in Firebase",
+    "created_at": "2026-09-06T17:28:31.874Z",
+    "id": "doc_1788715711875_d67xri"
+  },
+  "doc_1788715734492_xwcwy7": {
+    "admin_id": "1",
+    "action": "DIRECT_PAYMENT_RECORDED",
+    "target_type": "STUDENT",
+    "target_id": "92",
+    "description": "Admin directly recorded CASH payment of ₹2500.00 for T. Dhileeswara Rao (STU-00092) for Cycle 1 on 06-Sep-2026 in Firebase",
+    "created_at": "2026-09-06T17:28:54.491Z",
+    "id": "doc_1788715734492_xwcwy7"
+  },
+  "doc_1788715755744_au4hcb": {
+    "admin_id": "1",
+    "action": "DIRECT_PAYMENT_RECORDED",
+    "target_type": "STUDENT",
+    "target_id": "22",
+    "description": "Admin directly recorded CASH payment of ₹2500.00 for D. Uday Kumar (STU-00022) for Cycle 1 on 06-Sep-2026 in Firebase",
+    "created_at": "2026-09-06T17:29:15.744Z",
+    "id": "doc_1788715755744_au4hcb"
+  },
+  "doc_1788715772640_tp1zof": {
+    "admin_id": "1",
+    "action": "DIRECT_PAYMENT_RECORDED",
+    "target_type": "STUDENT",
+    "target_id": "98",
+    "description": "Admin directly recorded CASH payment of ₹2500.00 for U. Harsha (STU-00098) for Cycle 1 on 06-Sep-2026 in Firebase",
+    "created_at": "2026-09-06T17:29:32.639Z",
+    "id": "doc_1788715772640_tp1zof"
+  },
+  "doc_1788715783314_tjaxec": {
+    "admin_id": "1",
+    "action": "DIRECT_PAYMENT_RECORDED",
+    "target_type": "STUDENT",
+    "target_id": "49",
+    "description": "Admin directly recorded CASH payment of ₹2500.00 for M. Manoj Kumar (STU-00049) for Cycle 1 on 06-Sep-2026 in Firebase",
+    "created_at": "2026-09-06T17:29:43.314Z",
+    "id": "doc_1788715783314_tjaxec"
+  },
+  "doc_1788715797721_zajbut": {
+    "admin_id": "1",
+    "action": "DIRECT_PAYMENT_RECORDED",
+    "target_type": "STUDENT",
+    "target_id": "99",
+    "description": "Admin directly recorded CASH payment of ₹2500.00 for U. Nani (STU-00099) for Cycle 1 on 06-Sep-2026 in Firebase",
+    "created_at": "2026-09-06T17:29:57.721Z",
+    "id": "doc_1788715797721_zajbut"
+  },
+  "doc_1788715809895_he7g4a": {
+    "admin_id": "1",
+    "action": "DIRECT_PAYMENT_RECORDED",
+    "target_type": "STUDENT",
+    "target_id": "60",
+    "description": "Admin directly recorded CASH payment of ₹2500.00 for N. Karthik (STU-00060) for Cycle 1 on 06-Sep-2026 in Firebase",
+    "created_at": "2026-09-06T17:30:09.895Z",
+    "id": "doc_1788715809895_he7g4a"
+  },
+  "doc_1788715873203_lj5zlz": {
+    "admin_id": "1",
+    "action": "DIRECT_PAYMENT_RECORDED",
+    "target_type": "STUDENT",
+    "target_id": "81",
+    "description": "Admin directly recorded CASH payment of ₹2500.00 for S. Manikanta (STU-00081) for Cycle 1 on 06-Sep-2026 in Firebase",
+    "created_at": "2026-09-06T17:31:13.203Z",
+    "id": "doc_1788715873203_lj5zlz"
   }
 }

@@ -73,7 +73,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -82,7 +82,7 @@
     "student_code": "STU-00007",
     "name": "B. Hemanth Kumar",
     "mobile": "7287802874",
-    "joining_date": "2026-08-19",
+    "joining_date": "2026-08-29",
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
@@ -147,7 +147,7 @@
     "student_code": "STU-00012",
     "name": "B. Sai Hemanth",
     "mobile": "9490786776",
-    "joining_date": "2026-08-19",
+    "joining_date": "2026-08-29",
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
@@ -177,7 +177,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -186,7 +186,7 @@
     "student_code": "STU-00015",
     "name": "Ch. Desh Aditya",
     "mobile": "9133623681",
-    "joining_date": "2026-08-19",
+    "joining_date": "2026-08-29",
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
@@ -281,7 +281,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -407,7 +407,7 @@
     "student_code": "STU-00034",
     "name": "J. Anil Kumar",
     "mobile": "9390682957",
-    "joining_date": "2026-08-19",
+    "joining_date": "2026-08-29",
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
@@ -606,7 +606,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -645,7 +645,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -749,7 +749,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -840,7 +840,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -905,7 +905,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -1009,7 +1009,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -1152,7 +1152,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -1217,7 +1217,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -1230,7 +1230,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
