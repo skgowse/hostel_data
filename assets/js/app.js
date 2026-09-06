@@ -205,8 +205,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             const safeCycleLabel = (st.cycle_label || '').replace(/'/g, "\\'");
                             const isPaid = (st.status === 'COMPLETED');
                             const markPaidBtn = (!isPaid)
-                                ? `<button type="button" class="btn btn-outline-success btn-sm" title="Record Payment Directly (Mark as Paid)"
-                                           onclick="openDirectPaymentModal('${st.id}', '${st.student_code}', '${safeName}', '${st.applicable_fee}', '${st.cycle_number}', '${safeCycleLabel}', '${st.due_date_formatted}')">
+                                ? `<button type="button" class="btn btn-outline-success btn-sm mark-paid-instant-btn" title="Mark as Paid immediately"
+                                           onclick="markStudentAsPaidDirectly('${st.id}', '${st.applicable_fee}', this)">
                                         <i class="bi bi-cash-stack me-1"></i>Mark Paid
                                     </button>`
                                 : `<span class="badge bg-success text-white px-2 py-1"><i class="bi bi-check2-all me-1"></i>PAID</span>`;
@@ -478,71 +478,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // -------------------------------------------------------------
-    // 5. Single Student Direct Payment Form Submission
-    // -------------------------------------------------------------
-    const directPayForm = document.getElementById('directPaymentForm');
-    if (directPayForm) {
-        directPayForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const studentId = document.getElementById('directPayStudentId').value;
-            const method = document.getElementById('directPayMethod').value;
-            const amount = document.getElementById('directPayAmount').value;
-            const notes = document.getElementById('directPayNotes').value;
-            const paidDate = document.getElementById('directPayDate').value;
-            const confirmBtn = document.getElementById('confirmDirectPayBtn');
-
-            if (!studentId || !amount || parseFloat(amount) <= 0) {
-                alert('Please provide a valid payment amount.');
-                return;
-            }
-
-            confirmBtn.disabled = true;
-            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Recording...';
-
-            const params = new URLSearchParams();
-            params.append('action', 'direct_student_payment');
-            params.append('student_id', studentId);
-            params.append('payment_method', method);
-            params.append('amount', amount);
-            params.append('notes', notes);
-            params.append('paid_date', paidDate);
-
-        fetch('/api/admin-payments', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params.toString()
-        })
-        .then(r => r.json())
-        .then(res => {
-            confirmBtn.disabled = false;
-            confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Confirm & Mark Completed';
-
-            const modalEl = document.getElementById('directPaymentModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-
-            if (res.success) {
-                alert(res.message);
-                if (typeof fetchFilteredStudents === 'function') {
-                    fetchFilteredStudents();
-                } else {
-                    window.location.reload();
-                }
-            } else {
-                alert('Error: ' + res.message);
-            }
-        })
-        .catch(() => {
-            confirmBtn.disabled = false;
-            confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Confirm & Mark Completed';
-            alert('Connection error recording payment.');
-        });
-    });
-}
-
-    // -------------------------------------------------------------
-    // 6. Student Directory Live AJAX Search & Dynamic Filter
+    // 5. Student Directory Live AJAX Search & Dynamic Filter
     // -------------------------------------------------------------
     const dirSearchInput = document.getElementById('studentDirectorySearch');
     const dirMessSelect = document.getElementById('mess');
@@ -664,27 +600,52 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-// Modal Setup for Direct Offline Payment
-window.openDirectPaymentModal = function (studentId, studentCode, studentName, amount, cycleNumber, cycleLabel, dueDate) {
-    const sId = document.getElementById('directPayStudentId');
-    const sName = document.getElementById('directPayStudentName');
-    const sCode = document.getElementById('directPayStudentCode');
-    const sAmount = document.getElementById('directPayAmount');
-    const sCycle = document.getElementById('directPayCycleLabel');
-    const sDue = document.getElementById('directPayDueDate');
-    const sNotes = document.getElementById('directPayNotes');
+// -------------------------------------------------------------
+// Instant 1-Click Payment Recording (No Modal, Direct AJAX Mark as Paid)
+// -------------------------------------------------------------
+window.markStudentAsPaidDirectly = function (studentId, amount, btnElement) {
+    if (!studentId) return;
 
-    if (sId) sId.value = studentId;
-    if (sName) sName.textContent = studentName;
-    if (sCode) sCode.textContent = studentCode;
-    if (sAmount) sAmount.value = amount;
-    if (sCycle) sCycle.textContent = `Cycle ${cycleNumber} (${cycleLabel})`;
-    if (sDue) sDue.textContent = dueDate;
-    if (sNotes) sNotes.value = '';
-
-    const modalEl = document.getElementById('directPaymentModal');
-    if (modalEl) {
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
+    if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
     }
+
+    const todayYmd = new Date().toISOString().split('T')[0];
+    const params = new URLSearchParams();
+    params.append('action', 'direct_student_payment');
+    params.append('student_id', studentId);
+    params.append('payment_method', 'CASH');
+    params.append('amount', amount || '0');
+    params.append('paid_date', todayYmd);
+    params.append('notes', 'Direct 1-click mark paid by Admin');
+
+    fetch('/api/admin-payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            if (typeof fetchFilteredStudents === 'function') {
+                fetchFilteredStudents();
+            }
+        } else {
+            alert('Error recording payment: ' + res.message);
+            if (btnElement) {
+                btnElement.disabled = false;
+                btnElement.innerHTML = '<i class="bi bi-cash-stack me-1"></i>Mark Paid';
+            }
+        }
+    })
+    .catch(() => {
+        alert('Network connection error recording payment.');
+        if (btnElement) {
+            btnElement.disabled = false;
+            btnElement.innerHTML = '<i class="bi bi-cash-stack me-1"></i>Mark Paid';
+        }
+    });
 };
+
+window.openDirectPaymentModal = window.markStudentAsPaidDirectly;

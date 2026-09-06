@@ -174,65 +174,6 @@
     </div>
 </div>
 
-<!-- Modal: Direct Single Offline Payment -->
-<div class="modal fade" id="directPaymentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
-            <form id="directPaymentForm">
-                <input type="hidden" id="directPayStudentId">
-
-                <div class="modal-header bg-success text-white border-0 py-3">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-cash-stack me-2"></i>Record Offline Payment (Mark as Paid)</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="alert alert-success-subtle border-0 rounded-3 p-3 mb-3 small">
-                        <div class="fw-bold text-success-emphasis mb-1">Direct Cash / Office Payment</div>
-                        <div>This action will immediately mark the student's active billing cycle as <strong>COMPLETED</strong>, record the transaction in the system ledger, and advance them to the next cycle.</div>
-                    </div>
-
-                    <div class="mb-3 p-3 rounded-3 bg-body-tertiary">
-                        <div class="row g-2 small">
-                            <div class="col-6"><span class="text-muted">Student:</span> <strong id="directPayStudentName" class="d-block text-dark"></strong></div>
-                            <div class="col-6"><span class="text-muted">Code:</span> <strong id="directPayStudentCode" class="d-block text-primary font-monospace"></strong></div>
-                            <div class="col-6"><span class="text-muted">Cycle:</span> <strong id="directPayCycleLabel" class="d-block text-dark"></strong></div>
-                            <div class="col-6"><span class="text-muted">Due Date:</span> <strong id="directPayDueDate" class="d-block text-danger font-monospace"></strong></div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="directPayMethod" class="form-label fw-bold">Payment Method <span class="text-danger">*</span></label>
-                        <select class="form-select" id="directPayMethod" required>
-                            <option value="CASH" selected>Cash (Paid at Warden Office)</option>
-                            <option value="UPI">UPI / Direct Bank Transfer</option>
-                            <option value="CHEQUE">Cheque / DD</option>
-                            <option value="OTHER">Other Offline Mode</option>
-                        </select>
-                    </div>
-
-                    <input type="hidden" id="directPayAmount">
-
-                    <div class="mb-3">
-                        <label for="directPayDate" class="form-label fw-bold">Date of Payment <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" id="directPayDate" value="<%= todayFormatted.split('-').reverse().join('-') %>">
-                    </div>
-
-                    <div class="mb-2">
-                        <label for="directPayNotes" class="form-label fw-bold">Notes / Receipt Number</label>
-                        <textarea class="form-control" id="directPayNotes" rows="2" placeholder="Optional offline receipt number or note"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 p-3 pt-0">
-                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success px-4 fw-semibold" id="confirmDirectPayBtn">
-                        <i class="bi bi-check-circle-fill me-1"></i> Confirm & Mark Completed
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <!-- Modal: Bulk Mark as Paid -->
 <div class="modal fade" id="bulkPaymentModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
