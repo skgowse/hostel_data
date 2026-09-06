@@ -204,6 +204,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             const safeName = (st.name || '').replace(/'/g, "\\'");
                             const safeCycleLabel = (st.cycle_label || '').replace(/'/g, "\\'");
                             const isPaid = (st.status === 'COMPLETED');
+                            const hasPaidCycle = Boolean(st.last_paid_info) || isPaid;
                             const markPaidBtn = (!isPaid)
                                 ? `<button type="button" class="btn btn-outline-success btn-sm mark-paid-instant-btn" title="Mark as Paid immediately"
                                            onclick="markStudentAsPaidDirectly('${st.id}', '${st.applicable_fee}', this)">
@@ -218,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             const isChecked = selectedStudentsMap.has(Number(st.id));
 
-                            html += `<tr>
+                            html += `<tr class="${hasPaidCycle ? 'row-paid-highlight' : ''}">
                                 <td style="width: 40px;">
                                     <input type="checkbox" class="form-check-input student-select-checkbox" 
                                            data-student-id="${st.id}" 
@@ -605,6 +606,11 @@ document.addEventListener('DOMContentLoaded', function () {
 // -------------------------------------------------------------
 window.markStudentAsPaidDirectly = function (studentId, amount, btnElement) {
     if (!studentId) return;
+
+    const targetRow = btnElement ? btnElement.closest('tr') : null;
+    if (targetRow) {
+        targetRow.classList.add('row-paid-highlight');
+    }
 
     if (btnElement) {
         btnElement.disabled = true;
