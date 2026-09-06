@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db');
+const { db } = require('../config/firebase');
 const {
     formatYmd,
     formatDisplayDate,
@@ -20,7 +20,7 @@ function checkAdminApi(req, res, next) {
 router.use(checkAdminApi);
 
 // -------------------------------------------------------------
-// 1. Dynamic JSON Filter Endpoint
+// 1. Dynamic JSON Filter Endpoint (Firebase Firestore)
 // -------------------------------------------------------------
 router.get('/admin-unpaid-filter', async (req, res) => {
     try {
@@ -28,35 +28,42 @@ router.get('/admin-unpaid-filter', async (req, res) => {
         const serviceFilter = (req.query.service || 'ALL').trim();
         const fromDueDate = (req.query.from_due_date || '').trim();
         const toDueDate = (req.query.to_due_date || '').trim();
-        const search = (req.query.q || '').trim();
+        const search = (req.query.q || '').trim().toLowerCase();
 
-        let sql = `
-            SELECT s.*, u.id as user_id, u.mobile as user_mobile 
-            FROM students s 
-            LEFT JOIN users u ON u.student_id = s.id 
-            WHERE s.status = 'ACTIVE'
-        `;
-        const params = [];
+        const sSnap = await db.collection('students').where('status', '==', 'ACTIVE').get();
+        let students = [];
+        sSnap.forEach(doc => students.push(doc.data()));
 
         if (serviceFilter === 'MESS') {
-            sql += " AND s.mess_status = 'ACTIVE' AND (s.hostel_status IS NULL OR s.hostel_status != 'ACTIVE')";
+            students = students.filter(s => s.mess_status === 'ACTIVE' && s.hostel_status !== 'ACTIVE');
         } else if (serviceFilter === 'HOSTEL') {
-            sql += " AND s.hostel_status = 'ACTIVE' AND (s.mess_status IS NULL OR s.mess_status != 'ACTIVE')";
+            students = students.filter(s => s.hostel_status === 'ACTIVE' && s.mess_status !== 'ACTIVE');
         } else if (serviceFilter === 'BOTH') {
-            sql += " AND s.mess_status = 'ACTIVE' AND s.hostel_status = 'ACTIVE'";
+            students = students.filter(s => s.mess_status === 'ACTIVE' && s.hostel_status === 'ACTIVE');
         }
 
         if (search) {
-            sql += " AND (s.name LIKE ? OR s.student_code LIKE ? OR s.mobile LIKE ?)";
-            const term = `%${search}%`;
-            params.push(term, term, term);
+            students = students.filter(s =>
+                (s.name && s.name.toLowerCase().includes(search)) ||
+                (s.student_code && s.student_code.toLowerCase().includes(search)) ||
+                (s.mobile && s.mobile.includes(search))
+            );
         }
 
-        const [students] = await db.query(sql, params);
+        // Fetch all completed allocations
+        const allAllocSnap = await db.collection('student_payment_allocations').where('status', '==', 'COMPLETED').get();
+        let totalCollected = 0;
+        const completedAllocationsMap = {};
 
-        // Total Collections
-        const [sumRows] = await db.query("SELECT COALESCE(SUM(allocated_amount), 0) as total FROM student_payment_allocations WHERE status = 'COMPLETED'");
-        const totalCollected = parseFloat(sumRows[0].total) || 0;
+        for (const doc of allAllocSnap.docs) {
+            const a = doc.data();
+            totalCollected += parseFloat(a.allocated_amount || 0);
+
+            if (!completedAllocationsMap[a.student_id]) {
+                completedAllocationsMap[a.student_id] = [];
+            }
+            completedAllocationsMap[a.student_id].push(a);
+        }
 
         let dueTodayCount = 0;
         let overdueCount = 0;
@@ -69,7 +76,7 @@ router.get('/admin-unpaid-filter', async (req, res) => {
         const today = formatYmd(new Date());
 
         for (const st of students) {
-            const cycle = await getStudentCurrentCycle(db, st.id, today);
+            const cycle = await getStudentCurrentCycle(st.id, today);
             if (!cycle) continue;
 
             const stStatus = cycle.status;
@@ -84,26 +91,24 @@ router.get('/admin-unpaid-filter', async (req, res) => {
                 if (daysDiff <= 30) due30DaysCount++;
             }
 
-            // Check completed cycles
-            const [completedAllocations] = await db.query(`
-                SELECT a.*, t.payment_method, t.utr_number, t.transaction_code, t.verified_at, t.created_at as txn_date
-                FROM student_payment_allocations a
-                JOIN payment_transactions t ON a.payment_transaction_id = t.id
-                WHERE a.student_id = ? AND a.status = 'COMPLETED'
-                ORDER BY a.cycle_number DESC, a.id DESC
-            `, [st.id]);
-
-            if (completedAllocations.length > 0) {
-                completedCount += completedAllocations.length;
+            const studentCompleted = completedAllocationsMap[st.id] || [];
+            if (studentCompleted.length > 0) {
+                completedCount += studentCompleted.length;
             }
 
             // Completed Filter Mode
             if (statusFilter === 'COMPLETED') {
-                if (completedAllocations.length === 0) continue;
+                if (studentCompleted.length === 0) continue;
 
-                for (const ca of completedAllocations) {
+                for (const ca of studentCompleted) {
+                    let txn = null;
+                    if (ca.payment_transaction_id) {
+                        const tDoc = await db.collection('payment_transactions').doc(String(ca.payment_transaction_id)).get();
+                        if (tDoc.exists) txn = tDoc.data();
+                    }
+
                     const cycleLabel = `${formatDisplayDate(ca.cycle_start_date)} → ${formatDisplayDate(ca.cycle_end_date)}`;
-                    const paidDate = ca.verified_at ? formatYmd(ca.verified_at) : formatYmd(ca.txn_date);
+                    const paidDate = (txn && txn.verified_at) ? formatYmd(txn.verified_at) : ((txn && txn.created_at) ? formatYmd(txn.created_at) : formatYmd(ca.created_at));
                     const paidDateFormatted = formatDisplayDate(paidDate);
                     const dueYmd = formatYmd(ca.due_date);
 
@@ -128,10 +133,10 @@ router.get('/admin-unpaid-filter', async (req, res) => {
                         status: 'COMPLETED',
                         status_label: `Paid on ${paidDateFormatted}`,
                         days_diff: 0,
-                        days_text: `Paid on ${paidDateFormatted} (${ca.payment_method})`,
+                        days_text: `Paid on ${paidDateFormatted} (${txn ? txn.payment_method : 'CASH'})`,
                         pending_allocation: null,
                         paid_date: paidDateFormatted,
-                        transaction_code: ca.transaction_code
+                        transaction_code: txn ? txn.transaction_code : ''
                     });
                 }
                 continue;
@@ -149,9 +154,16 @@ router.get('/admin-unpaid-filter', async (req, res) => {
             if (toDueDate && dueYmd > toDueDate) continue;
 
             let lastPaidInfo = null;
-            if (completedAllocations.length > 0) {
-                const latest = completedAllocations[0];
-                const pDate = latest.verified_at ? formatYmd(latest.verified_at) : formatYmd(latest.txn_date);
+            if (studentCompleted.length > 0) {
+                // Sort to get latest
+                studentCompleted.sort((a, b) => b.cycle_number - a.cycle_number);
+                const latest = studentCompleted[0];
+                let txn = null;
+                if (latest.payment_transaction_id) {
+                    const tDoc = await db.collection('payment_transactions').doc(String(latest.payment_transaction_id)).get();
+                    if (tDoc.exists) txn = tDoc.data();
+                }
+                const pDate = (txn && txn.verified_at) ? formatYmd(txn.verified_at) : formatYmd(latest.created_at);
                 lastPaidInfo = `Cycle ${latest.cycle_number} Paid (₹${parseFloat(latest.allocated_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })} on ${formatDisplayDate(pDate)})`;
             }
 
@@ -204,13 +216,13 @@ router.get('/admin-unpaid-filter', async (req, res) => {
             students: filteredList
         });
     } catch (err) {
-        console.error('API Filter Error:', err);
+        console.error('Firebase API Filter Error:', err);
         res.status(500).json({ success: false, message: 'Server error processing filter query.' });
     }
 });
 
 // -------------------------------------------------------------
-// 2. Direct Single & Bulk Payment Processing
+// 2. Direct Single & Bulk Payment Processing (Firestore)
 // -------------------------------------------------------------
 router.post('/admin-payments', async (req, res) => {
     const adminId = req.session.userId;
@@ -227,54 +239,65 @@ router.post('/admin-payments', async (req, res) => {
             return res.json({ success: false, message: 'Invalid student ID or payment amount.' });
         }
 
-        const conn = await db.getConnection();
         try {
-            await conn.beginTransaction();
-
-            const cycle = await getStudentCurrentCycle(conn, studentId, paidDate);
+            const cycle = await getStudentCurrentCycle(studentId, paidDate);
             if (!cycle) {
-                await conn.rollback();
-                conn.release();
                 return res.json({ success: false, message: 'Student record not found.' });
             }
 
-            // Sync student's recurring monthly fee
-            await conn.query("UPDATE students SET monthly_fee = ? WHERE id = ?", [amount, studentId]);
+            // Sync student's recurring monthly fee in Firestore
+            await db.collection('students').doc(String(studentId)).update({
+                monthly_fee: amount
+            });
 
             const cycleSummary = `Direct ${method} Payment - Cycle ${cycle.cycle_number} (${cycle.cycle_label})`;
             const txnCode = 'TXN-' + Math.floor(Date.now() / 1000) + '-' + Math.floor(1000 + Math.random() * 9000);
-
-            // Insert transaction
             const utrNumber = 'UTR-' + txnCode;
-            const [txnRes] = await conn.query(`
-                INSERT INTO payment_transactions 
-                (transaction_code, payer_user_id, utr_number, billing_period, total_amount, payment_method, cycle_summary, status, verified_by, verified_at, notes, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'COMPLETED', ?, NOW(), ?, NOW(), NOW())
-            `, [txnCode, adminId, utrNumber, cycle.cycle_label, amount, method, cycleSummary, adminId, notes ? `${notes} [Paid on ${formatDisplayDate(paidDate)}]` : `Paid on ${formatDisplayDate(paidDate)}`]);
+            const txnId = 'txn_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
 
-            const txnId = txnRes.insertId;
+            // Insert transaction doc
+            await db.collection('payment_transactions').doc(txnId).set({
+                id: txnId,
+                transaction_code: txnCode,
+                payer_user_id: String(adminId),
+                utr_number: utrNumber,
+                billing_period: cycle.cycle_label,
+                total_amount: amount,
+                payment_method: method,
+                cycle_summary: cycleSummary,
+                status: 'COMPLETED',
+                verified_by: String(adminId),
+                verified_at: new Date().toISOString(),
+                notes: notes ? `${notes} [Paid on ${formatDisplayDate(paidDate)}]` : `Paid on ${formatDisplayDate(paidDate)}`,
+                created_at: new Date().toISOString()
+            });
 
-            // Insert Allocation
-            await conn.query(`
-                INSERT INTO student_payment_allocations
-                (payment_transaction_id, student_id, cycle_number, cycle_start_date, cycle_end_date, due_date, amount_due, allocated_amount, service_covered, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'COMPLETED', NOW(), NOW())
-            `, [txnId, studentId, cycle.cycle_number, cycle.cycle_start_date, cycle.cycle_end_date, cycle.due_date, amount, amount, cycle.service_label]);
+            // Insert Allocation doc
+            const allocId = 'alloc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+            await db.collection('student_payment_allocations').doc(allocId).set({
+                id: allocId,
+                payment_transaction_id: txnId,
+                student_id: studentId,
+                cycle_number: cycle.cycle_number,
+                cycle_start_date: cycle.cycle_start_date,
+                cycle_end_date: cycle.cycle_end_date,
+                due_date: cycle.due_date,
+                amount_due: amount,
+                allocated_amount: amount,
+                service_covered: cycle.service_label,
+                status: 'COMPLETED',
+                created_at: new Date().toISOString()
+            });
 
-            await logAudit(conn, adminId, 'DIRECT_PAYMENT_RECORDED', 'STUDENT', studentId,
-                `Admin directly recorded ${method} payment of ₹${amount.toFixed(2)} for ${cycle.student_name} (${cycle.student_code}) for Cycle ${cycle.cycle_number} on ${formatDisplayDate(paidDate)}`);
-
-            await conn.commit();
-            conn.release();
+            await logAudit(adminId, 'DIRECT_PAYMENT_RECORDED', 'STUDENT', studentId,
+                `Admin directly recorded ${method} payment of ₹${amount.toFixed(2)} for ${cycle.student_name} (${cycle.student_code}) for Cycle ${cycle.cycle_number} on ${formatDisplayDate(paidDate)} in Firebase`);
 
             return res.json({
                 success: true,
                 message: `Payment of ₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} for Cycle ${cycle.cycle_number} recorded successfully on ${formatDisplayDate(paidDate)} and marked COMPLETED.`
             });
         } catch (err) {
-            await conn.rollback();
-            conn.release();
-            console.error('Direct Payment Error:', err);
+            console.error('Firebase Direct Payment Error:', err);
             return res.status(500).json({ success: false, message: 'Database error recording payment.' });
         }
     }
@@ -295,10 +318,7 @@ router.post('/admin-payments', async (req, res) => {
         const notes = (req.body.notes || '').trim();
         const paidDate = req.body.paid_date ? formatYmd(req.body.paid_date) : formatYmd(new Date());
 
-        const conn = await db.getConnection();
         try {
-            await conn.beginTransaction();
-
             let processedCount = 0;
             let totalProcessedAmount = 0;
 
@@ -306,37 +326,53 @@ router.post('/admin-payments', async (req, res) => {
                 const studentId = parseInt(sId, 10);
                 if (!studentId) continue;
 
-                const cycle = await getStudentCurrentCycle(conn, studentId, paidDate);
+                const cycle = await getStudentCurrentCycle(studentId, paidDate);
                 if (!cycle) continue;
 
                 const amount = cycle.amount_due;
                 const cycleSummary = `Bulk ${method} Payment - Cycle ${cycle.cycle_number} (${cycle.cycle_label})`;
                 const txnCode = 'TXN-' + Math.floor(Date.now() / 1000) + '-' + Math.floor(1000 + Math.random() * 9000);
                 const utrNumber = 'UTR-' + txnCode;
+                const txnId = 'txn_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
 
-                const [txnRes] = await conn.query(`
-                    INSERT INTO payment_transactions 
-                    (transaction_code, payer_user_id, utr_number, billing_period, total_amount, payment_method, cycle_summary, status, verified_by, verified_at, notes, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 'COMPLETED', ?, NOW(), ?, NOW(), NOW())
-                `, [txnCode, adminId, utrNumber, cycle.cycle_label, amount, method, cycleSummary, adminId, notes ? `${notes} [Batch Paid on ${formatDisplayDate(paidDate)}]` : `Batch Paid on ${formatDisplayDate(paidDate)}`]);
+                await db.collection('payment_transactions').doc(txnId).set({
+                    id: txnId,
+                    transaction_code: txnCode,
+                    payer_user_id: String(adminId),
+                    utr_number: utrNumber,
+                    billing_period: cycle.cycle_label,
+                    total_amount: amount,
+                    payment_method: method,
+                    cycle_summary: cycleSummary,
+                    status: 'COMPLETED',
+                    verified_by: String(adminId),
+                    verified_at: new Date().toISOString(),
+                    notes: notes ? `${notes} [Batch Paid on ${formatDisplayDate(paidDate)}]` : `Batch Paid on ${formatDisplayDate(paidDate)}`,
+                    created_at: new Date().toISOString()
+                });
 
-                const txnId = txnRes.insertId;
-
-                await conn.query(`
-                    INSERT INTO student_payment_allocations
-                    (payment_transaction_id, student_id, cycle_number, cycle_start_date, cycle_end_date, due_date, amount_due, allocated_amount, service_covered, status, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'COMPLETED', NOW(), NOW())
-                `, [txnId, studentId, cycle.cycle_number, cycle.cycle_start_date, cycle.cycle_end_date, cycle.due_date, amount, amount, cycle.service_label]);
+                const allocId = 'alloc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+                await db.collection('student_payment_allocations').doc(allocId).set({
+                    id: allocId,
+                    payment_transaction_id: txnId,
+                    student_id: studentId,
+                    cycle_number: cycle.cycle_number,
+                    cycle_start_date: cycle.cycle_start_date,
+                    cycle_end_date: cycle.cycle_end_date,
+                    due_date: cycle.due_date,
+                    amount_due: amount,
+                    allocated_amount: amount,
+                    service_covered: cycle.service_label,
+                    status: 'COMPLETED',
+                    created_at: new Date().toISOString()
+                });
 
                 processedCount++;
                 totalProcessedAmount += amount;
             }
 
-            await logAudit(conn, adminId, 'BULK_PAYMENT_RECORDED', 'STUDENT', 0,
-                `Admin recorded bulk ${method} payments for ${processedCount} students totaling ₹${totalProcessedAmount.toFixed(2)} on ${formatDisplayDate(paidDate)}`);
-
-            await conn.commit();
-            conn.release();
+            await logAudit(adminId, 'BULK_PAYMENT_RECORDED', 'STUDENT', 0,
+                `Admin recorded bulk ${method} payments for ${processedCount} students totaling ₹${totalProcessedAmount.toFixed(2)} on ${formatDisplayDate(paidDate)} in Firebase`);
 
             return res.json({
                 success: true,
@@ -345,9 +381,7 @@ router.post('/admin-payments', async (req, res) => {
                 total_amount: totalProcessedAmount
             });
         } catch (err) {
-            await conn.rollback();
-            conn.release();
-            console.error('Bulk Payment Error:', err);
+            console.error('Firebase Bulk Payment Error:', err);
             return res.status(500).json({ success: false, message: 'Database error processing bulk payments.' });
         }
     }

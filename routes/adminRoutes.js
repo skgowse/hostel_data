@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db');
+const { db } = require('../config/firebase');
 const { requireAdmin, setFlash } = require('../middleware/auth');
 const {
     formatYmd,
@@ -34,7 +34,7 @@ router.get(['/', '/dashboard'], async (req, res) => {
 // -------------------------------------------------------------
 router.get('/students', async (req, res) => {
     try {
-        const search = (req.query.q || '').trim();
+        const search = (req.query.q || '').trim().toLowerCase();
         const messFilter = (req.query.mess || '').trim();
         const hostelFilter = (req.query.hostel || '').trim();
         const statusFilter = (req.query.status || '').trim();
@@ -42,62 +42,53 @@ router.get('/students', async (req, res) => {
         const toDate = (req.query.to_date || '').trim();
         const sort = (req.query.sort || 'date_asc').trim();
 
-        let sql = `
-            SELECT s.*, u.id as user_id 
-            FROM students s 
-            LEFT JOIN users u ON u.student_id = s.id 
-            WHERE 1=1
-        `;
-        const params = [];
+        const snap = await db.collection('students').get();
+        let students = [];
+        snap.forEach(doc => students.push(doc.data()));
 
         if (search) {
-            sql += " AND (s.name LIKE ? OR s.mobile LIKE ? OR s.student_code LIKE ?)";
-            const term = `%${search}%`;
-            params.push(term, term, term);
+            students = students.filter(s =>
+                (s.name && s.name.toLowerCase().includes(search)) ||
+                (s.student_code && s.student_code.toLowerCase().includes(search)) ||
+                (s.mobile && s.mobile.includes(search))
+            );
         }
 
         if (messFilter) {
-            sql += " AND s.mess_status = ?";
-            params.push(messFilter);
+            students = students.filter(s => s.mess_status === messFilter);
         }
 
         if (hostelFilter) {
-            sql += " AND s.hostel_status = ?";
-            params.push(hostelFilter);
+            students = students.filter(s => s.hostel_status === hostelFilter);
         }
 
         if (statusFilter) {
-            sql += " AND s.status = ?";
-            params.push(statusFilter);
+            students = students.filter(s => s.status === statusFilter);
         }
 
         if (fromDate) {
-            sql += " AND s.joining_date >= ?";
-            params.push(fromDate);
+            students = students.filter(s => formatYmd(s.joining_date) >= fromDate);
         }
 
         if (toDate) {
-            sql += " AND s.joining_date <= ?";
-            params.push(toDate);
+            students = students.filter(s => formatYmd(s.joining_date) <= toDate);
         }
 
         if (sort === 'date_desc') {
-            sql += " ORDER BY s.joining_date DESC, s.id DESC";
+            students.sort((a, b) => (formatYmd(b.joining_date) || '').localeCompare(formatYmd(a.joining_date) || '') || (b.id - a.id));
         } else if (sort === 'name_asc') {
-            sql += " ORDER BY s.name ASC";
+            students.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
         } else if (sort === 'name_desc') {
-            sql += " ORDER BY s.name DESC";
+            students.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
         } else {
-            sql += " ORDER BY s.joining_date ASC, s.id ASC";
+            students.sort((a, b) => (formatYmd(a.joining_date) || '').localeCompare(formatYmd(b.joining_date) || '') || (a.id - b.id));
         }
-
-        const [students] = await db.query(sql, params);
 
         const studentsWithCycles = [];
         const today = formatYmd(new Date());
 
         for (const st of students) {
-            const cycle = await getStudentCurrentCycle(db, st.id, today);
+            const cycle = await getStudentCurrentCycle(st.id, today);
             studentsWithCycles.push({
                 ...st,
                 joining_date_formatted: formatDisplayDate(st.joining_date),
@@ -153,20 +144,32 @@ router.post('/student-add', async (req, res) => {
     }
 
     try {
-        const studentCode = await generateStudentCode(db);
-        const [result] = await db.query(`
-            INSERT INTO students (student_code, name, mobile, joining_date, mess_status, hostel_status, room_no, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-        `, [studentCode, name, cleanMobile || null, joiningDate, messStatus, hostelStatus, roomNo || null, status]);
+        const nextInfo = await generateStudentCode();
+        const studentCode = nextInfo.code;
+        const newId = nextInfo.id;
 
-        const newId = result.insertId;
+        const newStudent = {
+            id: newId,
+            student_code: studentCode,
+            name,
+            mobile: cleanMobile || null,
+            joining_date: joiningDate,
+            mess_status: messStatus,
+            hostel_status: hostelStatus,
+            room_no: roomNo || null,
+            monthly_fee: null,
+            status,
+            created_at: new Date().toISOString()
+        };
 
-        await logAudit(db, adminId, 'MANUAL_ADD_STUDENT', 'STUDENT', newId, `Added student ${name} (${studentCode})`);
+        await db.collection('students').doc(String(newId)).set(newStudent);
+
+        await logAudit(adminId, 'MANUAL_ADD_STUDENT', 'STUDENT', newId, `Added student ${name} (${studentCode}) in Firebase`);
         setFlash(req, 'success', `Student ${name} (${studentCode}) added successfully!`);
         return res.redirect(`/admin/student-view/${newId}`);
     } catch (err) {
         console.error('Add Student error:', err);
-        errors.push(`Database error: ${err.message}`);
+        errors.push(`Firebase error: ${err.message}`);
         return res.render('admin/student-add', {
             pageTitle: 'Add New Student',
             errors,
@@ -181,12 +184,12 @@ router.post('/student-add', async (req, res) => {
 router.get('/student-edit/:id', async (req, res) => {
     const id = parseInt(req.params.id, 10);
     try {
-        const [rows] = await db.query("SELECT * FROM students WHERE id = ? LIMIT 1", [id]);
-        if (!rows || rows.length === 0) {
+        const doc = await db.collection('students').doc(String(id)).get();
+        if (!doc.exists) {
             setFlash(req, 'danger', 'Student not found.');
             return res.redirect('/admin/students');
         }
-        const student = rows[0];
+        const student = doc.data();
         student.joining_date_ymd = formatYmd(student.joining_date);
 
         res.render('admin/student-edit', {
@@ -210,38 +213,34 @@ router.post('/student-edit/:id', async (req, res) => {
         const delId = parseInt(req.body.student_id || id, 10);
         const dropoutReason = (req.body.dropout_reason || 'Student dropped out / withdrew enrollment').trim();
 
-        const conn = await db.getConnection();
         try {
-            await conn.beginTransaction();
-
-            const [chkRows] = await conn.query("SELECT s.*, u.id as user_id FROM students s LEFT JOIN users u ON u.student_id = s.id WHERE s.id = ? LIMIT 1", [delId]);
-            if (!chkRows || chkRows.length === 0) {
-                await conn.rollback();
-                conn.release();
+            const sDoc = await db.collection('students').doc(String(delId)).get();
+            if (!sDoc.exists) {
                 setFlash(req, 'danger', 'Student record not found.');
                 return res.redirect('/admin/students');
             }
-            const stToDel = chkRows[0];
+            const stToDel = sDoc.data();
 
-            await conn.query("DELETE FROM student_payment_allocations WHERE student_id = ?", [delId]);
-            await conn.query("DELETE FROM name_change_requests WHERE student_id = ?", [delId]);
-            if (stToDel.user_id) {
-                await conn.query("DELETE FROM notifications WHERE user_id = ?", [stToDel.user_id]);
-                await conn.query("DELETE FROM users WHERE id = ?", [stToDel.user_id]);
-            }
-            await conn.query("DELETE FROM students WHERE id = ?", [delId]);
+            // Delete associated allocations in Firestore
+            const allocsSnap = await db.collection('student_payment_allocations')
+                .where('student_id', '==', delId)
+                .get();
+            
+            const batch = db.batch();
+            allocsSnap.forEach(doc => {
+                batch.delete(db.collection('student_payment_allocations').doc(doc.id));
+            });
 
-            await logAudit(conn, adminId, 'DELETE_STUDENT', 'STUDENT', delId,
-                `Admin permanently removed student ${stToDel.student_code} (${stToDel.name}). Reason: ${dropoutReason}`);
+            // Delete student doc
+            batch.delete(db.collection('students').doc(String(delId)));
+            await batch.commit();
 
-            await conn.commit();
-            conn.release();
+            await logAudit(adminId, 'DELETE_STUDENT', 'STUDENT', delId,
+                `Admin permanently removed student ${stToDel.student_code} (${stToDel.name}) from Firebase. Reason: ${dropoutReason}`);
 
-            setFlash(req, 'success', `Student ${stToDel.student_code} (${stToDel.name}) has been permanently deleted from the database.`);
+            setFlash(req, 'success', `Student ${stToDel.student_code} (${stToDel.name}) has been permanently deleted from Firebase.`);
             return res.redirect('/admin/students');
         } catch (err) {
-            await conn.rollback();
-            conn.release();
             console.error('Delete student error:', err);
             setFlash(req, 'danger', `Error deleting student: ${err.message}`);
             return res.redirect(`/admin/student-edit/${id}`);
@@ -266,31 +265,36 @@ router.post('/student-edit/:id', async (req, res) => {
     if (hostelStatus !== 'ACTIVE') roomNo = null;
 
     if (errors.length > 0) {
-        const [rows] = await db.query("SELECT * FROM students WHERE id = ? LIMIT 1", [id]);
+        const sDoc = await db.collection('students').doc(String(id)).get();
         return res.render('admin/student-edit', {
             pageTitle: `Edit: ${name}`,
-            student: { ...rows[0], joining_date_ymd: joiningDate, name, mobile, room_no: roomNo, monthly_fee: monthlyFee },
+            student: { ...sDoc.data(), joining_date_ymd: joiningDate, name, mobile, room_no: roomNo, monthly_fee: monthlyFee },
             errors
         });
     }
 
     try {
-        await db.query(`
-            UPDATE students 
-            SET name = ?, mobile = ?, joining_date = ?, mess_status = ?, hostel_status = ?, room_no = ?, monthly_fee = ?, status = ?
-            WHERE id = ?
-        `, [name, cleanMobile || null, joiningDate, messStatus, hostelStatus, roomNo || null, isNaN(monthlyFee) ? null : monthlyFee, status, id]);
+        await db.collection('students').doc(String(id)).update({
+            name,
+            mobile: cleanMobile || null,
+            joining_date: joiningDate,
+            mess_status: messStatus,
+            hostel_status: hostelStatus,
+            room_no: roomNo || null,
+            monthly_fee: isNaN(monthlyFee) ? null : monthlyFee,
+            status
+        });
 
-        await logAudit(db, adminId, 'UPDATE_STUDENT_DETAILS', 'STUDENT', id, `Updated student details for ${name} (ID: ${id})`);
-        setFlash(req, 'success', `Student ${name} updated successfully.`);
+        await logAudit(adminId, 'UPDATE_STUDENT_DETAILS', 'STUDENT', id, `Updated student details for ${name} (ID: ${id}) in Firebase`);
+        setFlash(req, 'success', `Student ${name} updated successfully in Firebase.`);
         return res.redirect(`/admin/student-view/${id}`);
     } catch (err) {
         console.error('Update student error:', err);
-        errors.push(`Database error: ${err.message}`);
-        const [rows] = await db.query("SELECT * FROM students WHERE id = ? LIMIT 1", [id]);
+        errors.push(`Firebase error: ${err.message}`);
+        const sDoc = await db.collection('students').doc(String(id)).get();
         return res.render('admin/student-edit', {
             pageTitle: `Edit: ${name}`,
-            student: rows[0],
+            student: sDoc.data(),
             errors
         });
     }
@@ -302,31 +306,42 @@ router.post('/student-edit/:id', async (req, res) => {
 router.get('/student-view/:id', async (req, res) => {
     const id = parseInt(req.params.id, 10);
     try {
-        const [rows] = await db.query("SELECT * FROM students WHERE id = ? LIMIT 1", [id]);
-        if (!rows || rows.length === 0) {
+        const sDoc = await db.collection('students').doc(String(id)).get();
+        if (!sDoc.exists) {
             setFlash(req, 'danger', 'Student not found.');
             return res.redirect('/admin/students');
         }
-        const student = rows[0];
+        const student = sDoc.data();
         const today = formatYmd(new Date());
-        const cycle = await getStudentCurrentCycle(db, id, today);
+        const cycle = await getStudentCurrentCycle(id, today);
 
-        const [allocations] = await db.query(`
-            SELECT a.*, t.payment_method, t.utr_number, t.transaction_code, t.verified_at, t.created_at as txn_date
-            FROM student_payment_allocations a
-            LEFT JOIN payment_transactions t ON a.payment_transaction_id = t.id
-            WHERE a.student_id = ?
-            ORDER BY a.cycle_number DESC, a.id DESC
-        `, [id]);
+        const allocSnap = await db.collection('student_payment_allocations')
+            .where('student_id', '==', id)
+            .get();
 
-        const formattedAllocations = allocations.map(a => ({
-            ...a,
-            cycle_start_formatted: formatDisplayDate(a.cycle_start_date),
-            cycle_end_formatted: formatDisplayDate(a.cycle_end_date),
-            due_date_formatted: formatDisplayDate(a.due_date),
-            paid_date_formatted: a.verified_at ? formatDisplayDate(a.verified_at) : (a.txn_date ? formatDisplayDate(a.txn_date) : '—'),
-            amount_formatted: `₹${parseFloat(a.allocated_amount || a.amount_due).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
-        }));
+        const allocations = [];
+        for (const doc of allocSnap.docs) {
+            const a = doc.data();
+            let txn = null;
+            if (a.payment_transaction_id) {
+                const tDoc = await db.collection('payment_transactions').doc(String(a.payment_transaction_id)).get();
+                if (tDoc.exists) txn = tDoc.data();
+            }
+
+            allocations.push({
+                ...a,
+                payment_method: txn ? txn.payment_method : 'CASH',
+                utr_number: txn ? txn.utr_number : '',
+                transaction_code: txn ? txn.transaction_code : '',
+                cycle_start_formatted: formatDisplayDate(a.cycle_start_date),
+                cycle_end_formatted: formatDisplayDate(a.cycle_end_date),
+                due_date_formatted: formatDisplayDate(a.due_date),
+                paid_date_formatted: (txn && txn.verified_at) ? formatDisplayDate(txn.verified_at) : ((txn && txn.created_at) ? formatDisplayDate(txn.created_at) : '—'),
+                amount_formatted: `₹${parseFloat(a.allocated_amount || a.amount_due).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+            });
+        }
+
+        allocations.sort((a, b) => b.cycle_number - a.cycle_number);
 
         res.render('admin/student-view', {
             pageTitle: `${student.name} (${student.student_code})`,
@@ -335,7 +350,7 @@ router.get('/student-view/:id', async (req, res) => {
                 joining_date_formatted: formatDisplayDate(student.joining_date)
             },
             cycle,
-            allocations: formattedAllocations
+            allocations
         });
     } catch (err) {
         console.error('Student view error:', err);
@@ -357,7 +372,11 @@ router.get('/export', async (req, res) => {
 
         res.write(['Student Code', 'Student Name', 'Mobile Number', 'Joining Date', 'Mess Status', 'Hostel Status', 'Room Number', 'Enrolment Status', 'Record Created'].join(',') + '\r\n');
 
-        const [students] = await db.query("SELECT * FROM students ORDER BY name ASC");
+        const snap = await db.collection('students').get();
+        const students = [];
+        snap.forEach(doc => students.push(doc.data()));
+        students.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
         for (const s of students) {
             const row = [
                 `"${s.student_code}"`,

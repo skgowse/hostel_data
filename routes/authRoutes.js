@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const db = require('../config/db');
+const { db } = require('../config/firebase');
 const { setFlash } = require('../middleware/auth');
 const { logAudit } = require('../utils/cycleEngine');
 
@@ -26,17 +26,19 @@ router.post('/login', async (req, res) => {
     }
 
     try {
-        const [rows] = await db.query(
-            "SELECT u.*, s.name as student_name FROM users u LEFT JOIN students s ON u.student_id = s.id WHERE (u.mobile = ? OR s.student_code = ?) AND u.role = 'admin' LIMIT 1",
-            [mobile, mobile]
-        );
+        const usersSnap = await db.collection('users')
+            .where('mobile', '==', mobile)
+            .where('role', '==', 'admin')
+            .limit(1)
+            .get();
 
-        if (!rows || rows.length === 0) {
+        if (usersSnap.empty) {
             setFlash(req, 'danger', 'Invalid mobile number or credentials.');
             return res.redirect('/login');
         }
 
-        const user = rows[0];
+        const userDoc = usersSnap.docs[0];
+        const user = userDoc.data();
 
         // Check password using bcrypt or plain match
         let isMatch = false;
@@ -60,20 +62,20 @@ router.post('/login', async (req, res) => {
         }
 
         // Set session
-        req.session.userId = user.id;
+        req.session.userId = user.id || userDoc.id;
         req.session.role = user.role;
         req.session.user = {
-            id: user.id,
-            name: 'Administrator',
+            id: user.id || userDoc.id,
+            name: user.name || 'Administrator',
             mobile: user.mobile,
             role: user.role
         };
 
-        await logAudit(db, user.id, 'ADMIN_LOGIN', 'USER', user.id, 'Admin logged in successfully');
+        await logAudit(user.id || userDoc.id, 'ADMIN_LOGIN', 'USER', user.id || userDoc.id, 'Admin logged in successfully via Firebase');
         setFlash(req, 'success', 'Welcome back, Administrator!');
         return res.redirect('/admin/dashboard');
     } catch (err) {
-        console.error('Login error:', err);
+        console.error('Firebase Login error:', err);
         setFlash(req, 'danger', 'Database error during sign in.');
         return res.redirect('/login');
     }

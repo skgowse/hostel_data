@@ -1,13 +1,16 @@
 /**
- * Cycle Engine & Helper Utilities - Node.js
+ * Cycle Engine & Helper Utilities - Firebase Firestore Edition
  * Mess & Hostel Management System
  */
+
+const { db } = require('../config/firebase');
 
 // Format date to YYYY-MM-DD
 function formatYmd(d) {
     if (!d) return '';
     if (typeof d === 'string') {
-        const parts = d.split('T')[0].split('-');
+        const clean = d.split('T')[0];
+        const parts = clean.split('-');
         if (parts.length === 3) {
             return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
         }
@@ -73,7 +76,7 @@ function calculateCycleDate(baseDateStr, monthOffset) {
 /**
  * Calculate applicable monthly fee based on student settings
  */
-async function getStudentApplicableFee(db, student) {
+async function getStudentApplicableFee(student) {
     if (student.monthly_fee !== null && student.monthly_fee !== undefined && !isNaN(parseFloat(student.monthly_fee))) {
         return {
             amount: parseFloat(student.monthly_fee),
@@ -103,23 +106,26 @@ async function getStudentApplicableFee(db, student) {
 }
 
 /**
- * Calculates the active cycle, due date, and status for a student.
+ * Calculates the active cycle, due date, and status for a student in Firestore.
  */
-async function getStudentCurrentCycle(db, studentId, asOfDateStr = null) {
+async function getStudentCurrentCycle(studentId, asOfDateStr = null) {
     if (!asOfDateStr) {
         asOfDateStr = formatYmd(new Date());
     }
 
-    const [students] = await db.query("SELECT * FROM students WHERE id = ? LIMIT 1", [studentId]);
-    if (!students || students.length === 0) return null;
-    const student = students[0];
+    const sDoc = await db.collection('students').doc(String(studentId)).get();
+    if (!sDoc.exists) return null;
+    const student = sDoc.data();
 
-    const [allocRows] = await db.query(`
-        SELECT cycle_number, status, payment_transaction_id, allocated_amount, amount_due
-        FROM student_payment_allocations
-        WHERE student_id = ?
-        ORDER BY cycle_number DESC, id DESC
-    `, [studentId]);
+    const allocSnap = await db.collection('student_payment_allocations')
+        .where('student_id', '==', parseInt(studentId, 10))
+        .get();
+
+    const allocRows = [];
+    allocSnap.forEach(doc => allocRows.push(doc.data()));
+
+    // Sort by cycle_number DESC
+    allocRows.sort((a, b) => b.cycle_number - a.cycle_number);
 
     let maxCompleted = 0;
     let pendingAllocation = null;
@@ -142,7 +148,7 @@ async function getStudentCurrentCycle(db, studentId, asOfDateStr = null) {
     const cycleEndDate = calculateCycleDate(joiningDate, currentCycleNum);
     const dueDate = cycleEndDate;
 
-    const feeInfo = await getStudentApplicableFee(db, student);
+    const feeInfo = await getStudentApplicableFee(student);
     let amountDue = feeInfo.amount;
 
     if (pendingAllocation && pendingAllocation.cycle_number === currentCycleNum) {
@@ -208,28 +214,46 @@ async function getStudentCurrentCycle(db, studentId, asOfDateStr = null) {
 }
 
 /**
- * Generate Next Unique Student Code: STU-00001
+ * Generate Next Unique Student Code in Firestore: STU-00001
  */
-async function generateStudentCode(db) {
-    const [rows] = await db.query("SELECT MAX(CAST(SUBSTRING(student_code, 5) AS UNSIGNED)) as max_code, MAX(id) as max_id FROM students WHERE student_code LIKE 'STU-%'");
-    const row = rows[0] || {};
-    const maxCode = row.max_code ? parseInt(row.max_code, 10) : 0;
-    const maxId = row.max_id ? parseInt(row.max_id, 10) : 0;
+async function generateStudentCode() {
+    const snap = await db.collection('students').get();
+    let maxCode = 0;
+    let maxId = 0;
+
+    snap.forEach(doc => {
+        const st = doc.data();
+        const idNum = parseInt(st.id, 10) || 0;
+        if (idNum > maxId) maxId = idNum;
+
+        if (st.student_code && st.student_code.startsWith('STU-')) {
+            const num = parseInt(st.student_code.substring(4), 10) || 0;
+            if (num > maxCode) maxCode = num;
+        }
+    });
+
     const next = Math.max(maxCode, maxId) + 1;
-    return `STU-${String(next).padStart(5, '0')}`;
+    return {
+        code: `STU-${String(next).padStart(5, '0')}`,
+        id: next
+    };
 }
 
 /**
- * Audit Logger
+ * Audit Logger in Firestore
  */
-async function logAudit(db, adminId, action, targetType, targetId, description) {
+async function logAudit(adminId, action, targetType, targetId, description) {
     try {
-        await db.query(
-            "INSERT INTO audit_logs (admin_id, action, target_type, target_id, description) VALUES (?, ?, ?, ?, ?)",
-            [adminId, action, targetType, targetId, description]
-        );
+        await db.collection('audit_logs').add({
+            admin_id: String(adminId || '1'),
+            action,
+            target_type: targetType,
+            target_id: String(targetId || '0'),
+            description,
+            created_at: new Date().toISOString()
+        });
     } catch (err) {
-        console.error("Audit log failed:", err.message);
+        console.error("Firestore audit log failed:", err.message);
     }
 }
 
