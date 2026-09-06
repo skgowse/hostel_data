@@ -230,7 +230,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                            ${isPaid ? 'disabled title="Payment already completed"' : ''}
                                            ${isChecked ? 'checked' : ''}>
                                 </td>
-                                <td class="font-monospace fw-bold text-primary">${st.student_code}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        ${markPaidBtn}
+                                        <a href="/admin/student-view/${st.id}" class="btn btn-outline-secondary" title="View Profile">
+                                            <i class="bi bi-person"></i>
+                                        </a>
+                                    </div>
+                                </td>
                                 <td class="student-name-cell fw-semibold">${escapeHtml(st.name)}</td>
                                 <td class="font-monospace text-muted small">${st.mobile}</td>
                                 <td class="small text-muted">${st.joining_date}</td>
@@ -241,14 +248,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <td class="font-monospace ${isPaid ? 'text-success fw-semibold' : 'text-danger fw-bold'}">${st.due_date_formatted}</td>
                                 <td class="fw-bold font-monospace text-success">${st.applicable_fee_formatted}</td>
                                 <td>${statusBadge}</td>
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm">
-                                        ${markPaidBtn}
-                                        <a href="/admin/student-view/${st.id}" class="btn btn-outline-secondary" title="View Profile">
-                                            <i class="bi bi-person"></i>
-                                        </a>
-                                    </div>
-                                </td>
                             </tr>`;
                         });
                         studentFeeStatusTbody.innerHTML = html;
@@ -274,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         updateBulkActionBar();
                     } else {
-                        studentFeeStatusTbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-muted"><i class="bi bi-person-x fs-1 d-block mb-2"></i>No students matching the selected filter criteria.</td></tr>`;
+                        studentFeeStatusTbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted"><i class="bi bi-person-x fs-1 d-block mb-2"></i>No students matching the selected filter criteria.</td></tr>`;
                         updateBulkActionBar();
                     }
                 }
