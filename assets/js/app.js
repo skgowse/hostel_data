@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (filterLoading) filterLoading.classList.remove('d-none');
 
-        const url = `/api/admin-unpaid-filter.php?status=${encodeURIComponent(status)}&service=${encodeURIComponent(service)}&from_due_date=${encodeURIComponent(fromDue)}&to_due_date=${encodeURIComponent(toDue)}&q=${encodeURIComponent(q)}`;
+        const url = `/api/admin-unpaid-filter?status=${encodeURIComponent(status)}&service=${encodeURIComponent(service)}&from_due_date=${encodeURIComponent(fromDue)}&to_due_date=${encodeURIComponent(toDue)}&q=${encodeURIComponent(q)}`;
 
         fetch(url)
             .then(r => r.json())
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm">
                                         ${markPaidBtn}
-                                        <a href="/admin/student-view.php?id=${st.id}" class="btn btn-outline-secondary" title="View Profile">
+                                        <a href="/admin/student-view/${st.id}" class="btn btn-outline-secondary" title="View Profile">
                                             <i class="bi bi-person"></i>
                                         </a>
                                     </div>
@@ -395,7 +395,7 @@ document.addEventListener('DOMContentLoaded', function () {
             params.append('paid_date', paidDate);
             params.append('notes', notes);
 
-            fetch('/api/admin-payments.php', {
+            fetch('/api/admin-payments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params.toString()
@@ -517,7 +517,7 @@ document.addEventListener('DOMContentLoaded', function () {
             params.append('notes', notes);
             params.append('paid_date', paidDate);
 
-            fetch('/api/admin-payments.php', {
+            fetch('/api/admin-payments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params.toString()

@@ -16,7 +16,7 @@ router.use(requireAdmin);
 // -------------------------------------------------------------
 // 1. Dashboard: Fee Cycles & Due Date Management Hub
 // -------------------------------------------------------------
-router.get(['/', '/dashboard'], async (req, res) => {
+router.get(['/', '/dashboard', '/dashboard.php'], async (req, res) => {
     try {
         const today = formatYmd(new Date());
         res.render('admin/dashboard', {
@@ -32,7 +32,7 @@ router.get(['/', '/dashboard'], async (req, res) => {
 // -------------------------------------------------------------
 // 2. Student Directory
 // -------------------------------------------------------------
-router.get('/students', async (req, res) => {
+router.get(['/students', '/students.php'], async (req, res) => {
     try {
         const search = (req.query.q || '').trim().toLowerCase();
         const messFilter = (req.query.mess || '').trim();
@@ -110,14 +110,14 @@ router.get('/students', async (req, res) => {
 // -------------------------------------------------------------
 // 3. Add Student
 // -------------------------------------------------------------
-router.get('/student-add', (req, res) => {
+router.get(['/student-add', '/student-add.php'], (req, res) => {
     res.render('admin/student-add', {
         pageTitle: 'Add New Student',
         errors: []
     });
 });
 
-router.post('/student-add', async (req, res) => {
+router.post(['/student-add', '/student-add.php'], async (req, res) => {
     const adminId = req.session.userId;
     const name = (req.body.name || '').trim();
     const mobile = (req.body.mobile || '').trim();
@@ -181,8 +181,8 @@ router.post('/student-add', async (req, res) => {
 // -------------------------------------------------------------
 // 4. Edit Student & Permanent Dropout Deletion
 // -------------------------------------------------------------
-router.get('/student-edit/:id', async (req, res) => {
-    const id = parseInt(req.params.id, 10);
+router.get(['/student-edit/:id', '/student-edit', '/student-edit.php'], async (req, res) => {
+    const id = parseInt(req.params.id || req.query.id, 10);
     try {
         const doc = await db.collection('students').doc(String(id)).get();
         if (!doc.exists) {
@@ -203,9 +203,9 @@ router.get('/student-edit/:id', async (req, res) => {
     }
 });
 
-router.post('/student-edit/:id', async (req, res) => {
+router.post(['/student-edit/:id', '/student-edit', '/student-edit.php'], async (req, res) => {
     const adminId = req.session.userId;
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id || req.body.student_id || req.query.id, 10);
     const action = req.body.action || 'update_particulars';
 
     // Handle Permanent Deletion / Dropout
@@ -303,8 +303,8 @@ router.post('/student-edit/:id', async (req, res) => {
 // -------------------------------------------------------------
 // 5. Student View Profile & Payment Ledger
 // -------------------------------------------------------------
-router.get('/student-view/:id', async (req, res) => {
-    const id = parseInt(req.params.id, 10);
+router.get(['/student-view/:id', '/student-view', '/student-view.php'], async (req, res) => {
+    const id = parseInt(req.params.id || req.query.id, 10);
     try {
         const sDoc = await db.collection('students').doc(String(id)).get();
         if (!sDoc.exists) {
@@ -361,7 +361,7 @@ router.get('/student-view/:id', async (req, res) => {
 // -------------------------------------------------------------
 // 6. CSV Export
 // -------------------------------------------------------------
-router.get('/export', async (req, res) => {
+router.get(['/export', '/export.php'], async (req, res) => {
     try {
         const filename = `students_export_${new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14)}.csv`;
         res.setHeader('Content-Type', 'text/csv; charset=UTF-8');

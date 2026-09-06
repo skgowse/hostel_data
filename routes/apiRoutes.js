@@ -22,7 +22,7 @@ router.use(checkAdminApi);
 // -------------------------------------------------------------
 // 1. Dynamic JSON Filter Endpoint (Firebase Firestore)
 // -------------------------------------------------------------
-router.get('/admin-unpaid-filter', async (req, res) => {
+router.get(['/admin-unpaid-filter', '/admin-unpaid-filter.php'], async (req, res) => {
     try {
         const statusFilter = (req.query.status || 'ALL').trim();
         const serviceFilter = (req.query.service || 'ALL').trim();
@@ -224,7 +224,7 @@ router.get('/admin-unpaid-filter', async (req, res) => {
 // -------------------------------------------------------------
 // 2. Direct Single & Bulk Payment Processing (Firestore)
 // -------------------------------------------------------------
-router.post('/admin-payments', async (req, res) => {
+router.post(['/admin-payments', '/admin-payments.php'], async (req, res) => {
     const adminId = req.session.userId;
     const action = req.body.action || '';
 

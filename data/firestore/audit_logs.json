@@ -3814,5 +3814,23 @@
     "description": "Admin permanently removed student STU-00115 (Updated Candidate Firebase Suite) from Firebase. Reason: Firebase suite cleanup",
     "created_at": "2026-09-06T15:45:57.192Z",
     "id": "doc_1788709557194_rjgblq"
+  },
+  "doc_1788709638095_8z0w80": {
+    "admin_id": "1",
+    "action": "ADMIN_LOGIN",
+    "target_type": "USER",
+    "target_id": "1",
+    "description": "Admin logged in successfully via Firebase",
+    "created_at": "2026-09-06T15:47:18.093Z",
+    "id": "doc_1788709638095_8z0w80"
+  },
+  "doc_1788710178917_f4qewp": {
+    "admin_id": "1",
+    "action": "ADMIN_LOGIN",
+    "target_type": "USER",
+    "target_id": "1",
+    "description": "Admin logged in successfully via Firebase",
+    "created_at": "2026-09-06T15:56:18.915Z",
+    "id": "doc_1788710178917_f4qewp"
   }
 }
