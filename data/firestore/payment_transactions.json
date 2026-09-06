@@ -1,19 +1,4 @@
 {
-  "txn_1788711963872_6za6": {
-    "id": "txn_1788711963872_6za6",
-    "transaction_code": "TXN-1788711963-8248",
-    "payer_user_id": "1",
-    "utr_number": "UTR-TXN-1788711963-8248",
-    "billing_period": "20-Aug-2026 → 20-Sep-2026",
-    "total_amount": 2500,
-    "payment_method": "CASH",
-    "cycle_summary": "Direct CASH Payment - Cycle 1 (20-Aug-2026 → 20-Sep-2026)",
-    "status": "COMPLETED",
-    "verified_by": "1",
-    "verified_at": "2026-09-06T16:26:03.872Z",
-    "notes": "Paid on 06-Sep-2026",
-    "created_at": "2026-09-06T16:26:03.872Z"
-  },
   "txn_1788714522633_b9km": {
     "id": "txn_1788714522633_b9km",
     "transaction_code": "TXN-1788714522-4883",
@@ -28,5 +13,50 @@
     "verified_at": "2026-09-06T17:08:42.633Z",
     "notes": "Direct 1-click mark paid by Admin [Paid on 06-Sep-2026]",
     "created_at": "2026-09-06T17:08:42.633Z"
+  },
+  "txn_1788715018074_7jkh": {
+    "id": "txn_1788715018074_7jkh",
+    "transaction_code": "TXN-1788715018-7913",
+    "payer_user_id": "1",
+    "utr_number": "UTR-TXN-1788715018-7913",
+    "billing_period": "04-Aug-2026 → 04-Sep-2026",
+    "total_amount": 2500,
+    "payment_method": "CASH",
+    "cycle_summary": "Direct CASH Payment - Cycle 1 (04-Aug-2026 → 04-Sep-2026)",
+    "status": "COMPLETED",
+    "verified_by": "1",
+    "verified_at": "2026-09-06T17:16:58.074Z",
+    "notes": "Direct 1-click mark paid by Admin [Paid on 06-Sep-2026]",
+    "created_at": "2026-09-06T17:16:58.074Z"
+  },
+  "txn_1788715037568_gfpk": {
+    "id": "txn_1788715037568_gfpk",
+    "transaction_code": "TXN-1788715037-4692",
+    "payer_user_id": "1",
+    "utr_number": "UTR-TXN-1788715037-4692",
+    "billing_period": "04-Aug-2026 → 04-Sep-2026",
+    "total_amount": 2500,
+    "payment_method": "CASH",
+    "cycle_summary": "Direct CASH Payment - Cycle 1 (04-Aug-2026 → 04-Sep-2026)",
+    "status": "COMPLETED",
+    "verified_by": "1",
+    "verified_at": "2026-09-06T17:17:17.568Z",
+    "notes": "Direct 1-click mark paid by Admin [Paid on 06-Sep-2026]",
+    "created_at": "2026-09-06T17:17:17.569Z"
+  },
+  "txn_1788715072334_7axd": {
+    "id": "txn_1788715072334_7axd",
+    "transaction_code": "TXN-1788715072-8037",
+    "payer_user_id": "1",
+    "utr_number": "UTR-TXN-1788715072-8037",
+    "billing_period": "03-Aug-2026 → 03-Sep-2026",
+    "total_amount": 2500,
+    "payment_method": "CASH",
+    "cycle_summary": "Direct CASH Payment - Cycle 1 (03-Aug-2026 → 03-Sep-2026)",
+    "status": "COMPLETED",
+    "verified_by": "1",
+    "verified_at": "2026-09-06T17:17:52.335Z",
+    "notes": "Direct 1-click mark paid by Admin [Paid on 06-Sep-2026]",
+    "created_at": "2026-09-06T17:17:52.335Z"
   }
 }

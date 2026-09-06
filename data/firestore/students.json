@@ -658,7 +658,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -801,7 +801,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },
@@ -1178,7 +1178,7 @@
     "mess_status": "ACTIVE",
     "hostel_status": "NOT_APPLICABLE",
     "room_no": null,
-    "monthly_fee": null,
+    "monthly_fee": 2500,
     "status": "ACTIVE",
     "created_at": "2026-09-06T16:21:07.417Z"
   },

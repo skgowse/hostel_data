@@ -1,18 +1,4 @@
 {
-  "alloc_1788711963874_9you": {
-    "id": "alloc_1788711963874_9you",
-    "payment_transaction_id": "txn_1788711963872_6za6",
-    "student_id": 1,
-    "cycle_number": 1,
-    "cycle_start_date": "2026-08-20",
-    "cycle_end_date": "2026-09-20",
-    "due_date": "2026-09-20",
-    "amount_due": 2500,
-    "allocated_amount": 2500,
-    "service_covered": "Mess Only",
-    "status": "COMPLETED",
-    "created_at": "2026-09-06T16:26:03.874Z"
-  },
   "alloc_1788714522635_qs0q": {
     "id": "alloc_1788714522635_qs0q",
     "payment_transaction_id": "txn_1788714522633_b9km",
@@ -26,5 +12,47 @@
     "service_covered": "Mess Only",
     "status": "COMPLETED",
     "created_at": "2026-09-06T17:08:42.635Z"
+  },
+  "alloc_1788715018076_u15n": {
+    "id": "alloc_1788715018076_u15n",
+    "payment_transaction_id": "txn_1788715018074_7jkh",
+    "student_id": 94,
+    "cycle_number": 1,
+    "cycle_start_date": "2026-08-04",
+    "cycle_end_date": "2026-09-04",
+    "due_date": "2026-09-04",
+    "amount_due": 2500,
+    "allocated_amount": 2500,
+    "service_covered": "Mess Only",
+    "status": "COMPLETED",
+    "created_at": "2026-09-06T17:16:58.076Z"
+  },
+  "alloc_1788715037570_8q3s": {
+    "id": "alloc_1788715037570_8q3s",
+    "payment_transaction_id": "txn_1788715037568_gfpk",
+    "student_id": 53,
+    "cycle_number": 1,
+    "cycle_start_date": "2026-08-04",
+    "cycle_end_date": "2026-09-04",
+    "due_date": "2026-09-04",
+    "amount_due": 2500,
+    "allocated_amount": 2500,
+    "service_covered": "Mess Only",
+    "status": "COMPLETED",
+    "created_at": "2026-09-06T17:17:17.570Z"
+  },
+  "alloc_1788715072336_6gmn": {
+    "id": "alloc_1788715072336_6gmn",
+    "payment_transaction_id": "txn_1788715072334_7axd",
+    "student_id": 64,
+    "cycle_number": 1,
+    "cycle_start_date": "2026-08-03",
+    "cycle_end_date": "2026-09-03",
+    "due_date": "2026-09-03",
+    "amount_due": 2500,
+    "allocated_amount": 2500,
+    "service_covered": "Mess Only",
+    "status": "COMPLETED",
+    "created_at": "2026-09-06T17:17:52.337Z"
   }
 }
