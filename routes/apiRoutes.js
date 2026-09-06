@@ -231,18 +231,22 @@ router.post(['/admin-payments', '/admin-payments.php'], async (req, res) => {
     if (action === 'direct_student_payment') {
         const studentId = parseInt(req.body.student_id, 10);
         const method = req.body.payment_method || 'CASH';
-        const amount = parseFloat(req.body.amount);
+        let amount = parseFloat(req.body.amount);
         const notes = (req.body.notes || '').trim();
         const paidDate = req.body.paid_date ? formatYmd(req.body.paid_date) : formatYmd(new Date());
 
-        if (!studentId || isNaN(amount) || amount <= 0) {
-            return res.json({ success: false, message: 'Invalid student ID or payment amount.' });
+        if (!studentId) {
+            return res.json({ success: false, message: 'Invalid student ID.' });
         }
 
         try {
             const cycle = await getStudentCurrentCycle(studentId, paidDate);
             if (!cycle) {
                 return res.json({ success: false, message: 'Student record not found.' });
+            }
+
+            if (isNaN(amount) || amount <= 0) {
+                amount = cycle.amount_due;
             }
 
             // Sync student's recurring monthly fee in Firestore

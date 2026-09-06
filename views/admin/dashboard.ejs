@@ -26,7 +26,7 @@
 
 <!-- KPI Summary Cards (Clickable for Instant Filtering) -->
 <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
+    <div class="col-12 col-md-4">
         <div class="card stat-card border-0 shadow-sm rounded-3 p-3 kpi-clickable-card h-100" data-filter-status="OVERDUE" title="Click to filter Overdue Payments">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="small text-muted fw-bold">Overdue Payments</span>
@@ -39,7 +39,7 @@
         </div>
     </div>
 
-    <div class="col-6 col-lg-3">
+    <div class="col-12 col-md-4">
         <div class="card stat-card border-0 shadow-sm rounded-3 p-3 kpi-clickable-card h-100" data-filter-status="DUE_TODAY" title="Click to filter Due Today">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="small text-muted fw-bold">Due Today</span>
@@ -52,7 +52,7 @@
         </div>
     </div>
 
-    <div class="col-6 col-lg-3">
+    <div class="col-12 col-md-4">
         <div class="card stat-card border-0 shadow-sm rounded-3 p-3 kpi-clickable-card h-100" data-filter-status="DUE_7_DAYS" title="Click to filter Due within 7 Days">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <span class="small text-muted fw-bold">Due in 7 Days</span>
@@ -62,19 +62,6 @@
             </div>
             <div class="stat-value text-info fs-3 fw-bold" id="kpiDue7DaysCount">0</div>
             <div class="small text-muted mt-1">Upcoming within a week</div>
-        </div>
-    </div>
-
-    <div class="col-6 col-lg-3">
-        <div class="card stat-card border-0 shadow-sm rounded-3 p-3 kpi-clickable-card h-100" data-filter-status="COMPLETED" title="Click to filter Completed Payments">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="small text-muted fw-bold">Total Collected</span>
-                <div class="stat-icon bg-success-subtle text-success rounded-3 p-2">
-                    <i class="bi bi-cash-stack"></i>
-                </div>
-            </div>
-            <div class="stat-value text-success fs-3 fw-bold" id="kpiCollectedAmount">₹0.00</div>
-            <div class="small text-muted mt-1">Verified offline & online fees</div>
         </div>
     </div>
 </div>
@@ -224,15 +211,11 @@
                         </select>
                     </div>
 
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label for="directPayAmount" class="form-label fw-bold">Amount Paid (₹) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" class="form-control font-monospace fw-bold text-success fs-5" id="directPayAmount" required>
-                        </div>
-                        <div class="col-6">
-                            <label for="directPayDate" class="form-label fw-bold">Date of Payment <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="directPayDate" value="<%= todayFormatted.split('-').reverse().join('-') %>">
-                        </div>
+                    <input type="hidden" id="directPayAmount">
+
+                    <div class="mb-3">
+                        <label for="directPayDate" class="form-label fw-bold">Date of Payment <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="directPayDate" value="<%= todayFormatted.split('-').reverse().join('-') %>">
                     </div>
 
                     <div class="mb-2">
@@ -263,7 +246,7 @@
                 <div class="modal-body p-4">
                     <div class="alert alert-info-subtle border-0 rounded-3 p-3 mb-3 small">
                         <i class="bi bi-info-circle-fill text-info me-1"></i>
-                        You are about to mark active cycles as <strong>COMPLETED</strong> for <strong id="bulkModalCount">0</strong> students totaling <strong id="bulkModalTotal" class="text-success font-monospace">₹0.00</strong>.
+                        You are about to mark active cycles as <strong>COMPLETED</strong> for <strong id="bulkModalCount">0</strong> selected student(s).
                     </div>
 
                     <div class="table-responsive mb-3 border rounded-3" style="max-height: 200px; overflow-y: auto;">
@@ -273,7 +256,6 @@
                                     <th>Code</th>
                                     <th>Student</th>
                                     <th>Cycle</th>
-                                    <th class="text-end">Fee</th>
                                 </tr>
                             </thead>
                             <tbody id="bulkModalStudentList" class="small"></tbody>

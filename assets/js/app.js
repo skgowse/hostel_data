@@ -141,11 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const count = selectedStudentsMap.size;
         if (count > 0) {
-            let total = 0;
-            selectedStudentsMap.forEach(item => total += item.fee);
-
             if (countEl) countEl.textContent = `${count} Student${count > 1 ? 's' : ''} Selected`;
-            if (totalEl) totalEl.textContent = `Total: ₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             bulkBar.classList.remove('d-none');
         } else {
             bulkBar.classList.add('d-none');
@@ -343,19 +339,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (modalCount) modalCount.textContent = selectedStudentsMap.size;
 
-            let total = 0;
             let listHtml = '';
             selectedStudentsMap.forEach(st => {
-                total += st.fee;
                 listHtml += `<tr>
                     <td class="font-monospace fw-bold text-primary">${st.code}</td>
                     <td class="fw-semibold">${escapeHtml(st.name)}</td>
                     <td><span class="badge bg-light text-dark font-monospace">Cycle ${st.cycle}</span></td>
-                    <td class="text-end fw-bold font-monospace text-success">₹${st.fee.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                 </tr>`;
             });
 
-            if (modalTotal) modalTotal.textContent = `₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
             if (modalListTbody) modalListTbody.innerHTML = listHtml;
 
             const modalEl = document.getElementById('bulkPaymentModal');

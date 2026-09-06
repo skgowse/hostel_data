@@ -1,1 +1,16 @@
-{}
+{
+  "alloc_1788711963874_9you": {
+    "id": "alloc_1788711963874_9you",
+    "payment_transaction_id": "txn_1788711963872_6za6",
+    "student_id": 1,
+    "cycle_number": 1,
+    "cycle_start_date": "2026-08-20",
+    "cycle_end_date": "2026-09-20",
+    "due_date": "2026-09-20",
+    "amount_due": 2500,
+    "allocated_amount": 2500,
+    "service_covered": "Mess Only",
+    "status": "COMPLETED",
+    "created_at": "2026-09-06T16:26:03.874Z"
+  }
+}
