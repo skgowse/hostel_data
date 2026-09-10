@@ -584,25 +584,30 @@ body {
 
 /* Paid Record Highlight Style */
 .row-paid-highlight {
-    background-color: rgba(34, 197, 94, 0.08) !important;
-    border-left: 4px solid #16a34a !important;
+    background-color: rgba(34, 197, 94, 0.15) !important;
+    border-left: 5px solid #22c55e !important;
     transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .row-paid-highlight > td {
-    background-color: transparent !important;
+    background-color: rgba(34, 197, 94, 0.08) !important;
 }
 
 [data-bs-theme="dark"] .row-paid-highlight {
-    background-color: rgba(34, 197, 94, 0.14) !important;
-    border-left: 4px solid #22c55e !important;
+    background-color: rgba(34, 197, 94, 0.20) !important;
+    border-left: 5px solid #22c55e !important;
 }
 
-.row-paid-highlight:hover {
-    background-color: rgba(34, 197, 94, 0.16) !important;
+[data-bs-theme="dark"] .row-paid-highlight > td {
+    background-color: rgba(34, 197, 94, 0.15) !important;
 }
 
-[data-bs-theme="dark"] .row-paid-highlight:hover {
-    background-color: rgba(34, 197, 94, 0.22) !important;
+.row-paid-highlight:hover > td {
+    background-color: rgba(34, 197, 94, 0.18) !important;
 }
+
+[data-bs-theme="dark"] .row-paid-highlight:hover > td {
+    background-color: rgba(34, 197, 94, 0.25) !important;
+}
+
 

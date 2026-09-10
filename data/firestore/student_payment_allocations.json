@@ -488,5 +488,33 @@
     "service_covered": "Mess Only",
     "status": "COMPLETED",
     "created_at": "2026-09-10T01:24:44.505Z"
+  },
+  "alloc_1789054041473_gso0": {
+    "id": "alloc_1789054041473_gso0",
+    "payment_transaction_id": "txn_1789054041471_oyax",
+    "student_id": 74,
+    "cycle_number": 1,
+    "cycle_start_date": "2026-08-08",
+    "cycle_end_date": "2026-09-08",
+    "due_date": "2026-09-08",
+    "amount_due": 2500,
+    "allocated_amount": 2500,
+    "service_covered": "Mess Only",
+    "status": "COMPLETED",
+    "created_at": "2026-09-10T15:27:21.473Z"
+  },
+  "alloc_1789054111598_nb7t": {
+    "id": "alloc_1789054111598_nb7t",
+    "payment_transaction_id": "txn_1789054111596_okdw",
+    "student_id": 32,
+    "cycle_number": 1,
+    "cycle_start_date": "2026-08-08",
+    "cycle_end_date": "2026-09-08",
+    "due_date": "2026-09-08",
+    "amount_due": 2500,
+    "allocated_amount": 2500,
+    "service_covered": "Mess Only",
+    "status": "COMPLETED",
+    "created_at": "2026-09-10T15:28:31.598Z"
   }
 }

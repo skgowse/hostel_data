@@ -238,6 +238,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
 
                             const isChecked = selectedStudentsMap.has(Number(st.id));
+                            const paidBadgeIcon = hasPaidCycle
+                                ? `<span class="badge bg-success-subtle text-success border border-success ms-1 small" title="Student has completed paid cycle"><i class="bi bi-check2-circle me-1"></i>Paid</span>`
+                                : '';
 
                             html += `<tr class="${hasPaidCycle ? 'row-paid-highlight' : ''}">
                                 <td style="width: 40px;">
@@ -259,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                         </a>
                                     </div>
                                 </td>
-                                <td class="student-name-cell fw-semibold">${escapeHtml(st.name)}</td>
+                                <td class="student-name-cell fw-semibold">${escapeHtml(st.name)} ${paidBadgeIcon}</td>
                                 <td class="font-monospace text-muted small">${st.mobile}</td>
                                 <td class="small text-muted">${st.joining_date}</td>
                                 <td>
@@ -453,6 +456,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (ajaxStatusSelect) {
         ajaxStatusSelect.addEventListener('change', function () {
+            if (ajaxStatusSelect.value === 'ALL') {
+                if (ajaxFromDueDate) ajaxFromDueDate.value = '';
+                if (ajaxToDueDate) ajaxToDueDate.value = '';
+            }
             syncActiveKpiCard(ajaxStatusSelect.value);
             fetchFilteredStudents();
         });
