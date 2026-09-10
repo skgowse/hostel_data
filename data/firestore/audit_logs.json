@@ -781,5 +781,23 @@
     "description": "Admin logged in successfully via Firebase",
     "created_at": "2026-09-10T16:17:58.294Z",
     "id": "doc_1789057078295_vsapas"
+  },
+  "doc_1789057339784_znlzcw": {
+    "admin_id": "1",
+    "action": "ADMIN_LOGIN",
+    "target_type": "USER",
+    "target_id": "1",
+    "description": "Admin logged in successfully via Firebase",
+    "created_at": "2026-09-10T16:22:19.784Z",
+    "id": "doc_1789057339784_znlzcw"
+  },
+  "doc_1789057417604_qm8di8": {
+    "admin_id": "1",
+    "action": "ADMIN_LOGIN",
+    "target_type": "USER",
+    "target_id": "1",
+    "description": "Admin logged in successfully via Firebase",
+    "created_at": "2026-09-10T16:23:37.601Z",
+    "id": "doc_1789057417604_qm8di8"
   }
 }

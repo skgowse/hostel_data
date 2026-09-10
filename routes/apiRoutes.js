@@ -59,10 +59,11 @@ router.get(['/admin-unpaid-filter', '/admin-unpaid-filter.php'], async (req, res
             const a = doc.data();
             totalCollected += parseFloat(a.allocated_amount || 0);
 
-            if (!completedAllocationsMap[a.student_id]) {
-                completedAllocationsMap[a.student_id] = [];
+            const sid = String(a.student_id);
+            if (!completedAllocationsMap[sid]) {
+                completedAllocationsMap[sid] = [];
             }
-            completedAllocationsMap[a.student_id].push(a);
+            completedAllocationsMap[sid].push(a);
         }
 
         let dueTodayCount = 0;
@@ -91,55 +92,58 @@ router.get(['/admin-unpaid-filter', '/admin-unpaid-filter.php'], async (req, res
                 if (daysDiff <= 30) due30DaysCount++;
             }
 
-            const studentCompleted = completedAllocationsMap[st.id] || [];
+            const studentCompleted = completedAllocationsMap[String(st.id)] || [];
             if (studentCompleted.length > 0) {
                 completedCount += studentCompleted.length;
             }
 
-            // Completed Filter Mode
-            if (statusFilter === 'COMPLETED') {
-                if (studentCompleted.length === 0) continue;
+            // If status is COMPLETED or ALL with date filters, include matching completed allocations
+            if ((statusFilter === 'COMPLETED' || statusFilter === 'ALL') && (fromDueDate || toDueDate || statusFilter === 'COMPLETED')) {
+                if (studentCompleted.length > 0) {
+                    for (const ca of studentCompleted) {
+                        const dueYmd = formatYmd(ca.due_date);
+                        if (fromDueDate && dueYmd < fromDueDate) continue;
+                        if (toDueDate && dueYmd > toDueDate) continue;
 
-                for (const ca of studentCompleted) {
-                    let txn = null;
-                    if (ca.payment_transaction_id) {
-                        const tDoc = await db.collection('payment_transactions').doc(String(ca.payment_transaction_id)).get();
-                        if (tDoc.exists) txn = tDoc.data();
+                        let txn = null;
+                        if (ca.payment_transaction_id) {
+                            const tDoc = await db.collection('payment_transactions').doc(String(ca.payment_transaction_id)).get();
+                            if (tDoc.exists) txn = tDoc.data();
+                        }
+
+                        const cycleLabel = `${formatDisplayDate(ca.cycle_start_date)} → ${formatDisplayDate(ca.cycle_end_date)}`;
+                        const paidDate = (txn && txn.verified_at) ? formatYmd(txn.verified_at) : ((txn && txn.created_at) ? formatYmd(txn.created_at) : formatYmd(ca.created_at));
+                        const paidDateFormatted = formatDisplayDate(paidDate);
+
+                        filteredList.push({
+                            id: st.id,
+                            student_code: st.student_code,
+                            name: st.name,
+                            mobile: st.mobile || '—',
+                            raw_joining_date: formatYmd(st.joining_date),
+                            joining_date: formatDisplayDate(st.joining_date),
+                            cycle_number: parseInt(ca.cycle_number, 10),
+                            cycle_label: cycleLabel,
+                            due_date: dueYmd,
+                            due_date_formatted: formatDisplayDate(dueYmd),
+                            service_label: cycle.service_label,
+                            room_no: st.room_no || '—',
+                            applicable_fee: parseFloat(ca.allocated_amount),
+                            applicable_fee_formatted: `₹${parseFloat(ca.allocated_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+                            status: 'COMPLETED',
+                            status_label: `Paid on ${paidDateFormatted}`,
+                            days_diff: 0,
+                            days_text: `Paid on ${paidDateFormatted} (${txn ? txn.payment_method : 'CASH'})`,
+                            pending_allocation: null,
+                            paid_date: paidDateFormatted,
+                            transaction_code: txn ? txn.transaction_code : '',
+                            last_paid_info: `Cycle ${ca.cycle_number} Paid (₹${parseFloat(ca.allocated_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })} on ${paidDateFormatted})`
+                        });
                     }
-
-                    const cycleLabel = `${formatDisplayDate(ca.cycle_start_date)} → ${formatDisplayDate(ca.cycle_end_date)}`;
-                    const paidDate = (txn && txn.verified_at) ? formatYmd(txn.verified_at) : ((txn && txn.created_at) ? formatYmd(txn.created_at) : formatYmd(ca.created_at));
-                    const paidDateFormatted = formatDisplayDate(paidDate);
-                    const dueYmd = formatYmd(ca.due_date);
-
-                    if (fromDueDate && dueYmd < fromDueDate) continue;
-                    if (toDueDate && dueYmd > toDueDate) continue;
-
-                    filteredList.push({
-                        id: st.id,
-                        student_code: st.student_code,
-                        name: st.name,
-                        mobile: st.mobile || '—',
-                        raw_joining_date: formatYmd(st.joining_date),
-                        joining_date: formatDisplayDate(st.joining_date),
-                        cycle_number: parseInt(ca.cycle_number, 10),
-                        cycle_label: cycleLabel,
-                        due_date: dueYmd,
-                        due_date_formatted: formatDisplayDate(dueYmd),
-                        service_label: cycle.service_label,
-                        room_no: st.room_no || '—',
-                        applicable_fee: parseFloat(ca.allocated_amount),
-                        applicable_fee_formatted: `₹${parseFloat(ca.allocated_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
-                        status: 'COMPLETED',
-                        status_label: `Paid on ${paidDateFormatted}`,
-                        days_diff: 0,
-                        days_text: `Paid on ${paidDateFormatted} (${txn ? txn.payment_method : 'CASH'})`,
-                        pending_allocation: null,
-                        paid_date: paidDateFormatted,
-                        transaction_code: txn ? txn.transaction_code : ''
-                    });
                 }
-                continue;
+                if (statusFilter === 'COMPLETED') {
+                    continue;
+                }
             }
 
             // Apply Status Criteria for Active Cycles
