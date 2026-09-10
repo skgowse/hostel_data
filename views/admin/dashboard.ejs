@@ -18,9 +18,9 @@
         <a href="/admin/student-add" class="btn btn-primary btn-sm shadow-sm fw-semibold">
             <i class="bi bi-person-plus-fill me-1"></i> Add Student
         </a>
-        <a href="/admin/export" class="btn btn-outline-secondary btn-sm fw-semibold">
-            <i class="bi bi-download me-1"></i> Export CSV
-        </a>
+        <button type="button" id="exportDashboardFilteredBtn" class="btn btn-outline-success btn-sm fw-semibold" title="Download currently filtered students as CSV">
+            <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Export Filtered CSV
+        </button>
     </div>
 </div>
 
@@ -73,7 +73,10 @@
             <h5 class="fw-bold mb-1"><i class="bi bi-funnel-fill text-primary me-2"></i>Filter Students by Due Date & Cycle Status</h5>
             <p class="text-muted small mb-0">Displaying students ordered by joining date in ascending order</p>
         </div>
-        <div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-success btn-sm fw-semibold" id="exportToolbarFilteredBtn" title="Download filtered records">
+                <i class="bi bi-download me-1"></i> Download Filtered Data (<span id="exportCountSpan">0</span>)
+            </button>
             <button type="button" class="btn btn-outline-secondary btn-sm" id="resetFiltersBtn">
                 <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
             </button>

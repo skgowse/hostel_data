@@ -9,9 +9,9 @@
         <a href="/admin/student-add" class="btn btn-primary btn-sm shadow-sm fw-semibold">
             <i class="bi bi-person-plus-fill me-1"></i> Add Student
         </a>
-        <a href="/admin/export" class="btn btn-outline-secondary btn-sm fw-semibold">
-            <i class="bi bi-download me-1"></i> Export CSV
-        </a>
+        <button type="button" id="exportDirectoryFilteredBtn" class="btn btn-outline-success btn-sm fw-semibold" title="Download filtered student directory as CSV">
+            <i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Export Filtered CSV
+        </button>
     </div>
 </div>
 
@@ -53,6 +53,7 @@
             </div>
             <div class="col-6 col-md-3 d-flex gap-2">
                 <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel me-1"></i> Filter</button>
+                <button type="button" id="exportDirectoryToolbarBtn" class="btn btn-outline-success" title="Download Filtered Data as CSV"><i class="bi bi-download"></i></button>
                 <a href="/admin/students" id="clearDirectoryFiltersBtn" class="btn btn-outline-secondary" title="Clear Filters"><i class="bi bi-x-circle"></i></a>
             </div>
         </form>

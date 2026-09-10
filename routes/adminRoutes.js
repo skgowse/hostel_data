@@ -359,25 +359,119 @@ router.get(['/student-view/:id', '/student-view', '/student-view.php'], async (r
 });
 
 // -------------------------------------------------------------
-// 6. CSV Export
+// 6. CSV Export (Full or Filtered)
 // -------------------------------------------------------------
 router.get(['/export', '/export.php'], async (req, res) => {
     try {
-        const filename = `students_export_${new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14)}.csv`;
+        const type = (req.query.type || '').trim();
+        const search = (req.query.q || '').trim().toLowerCase();
+        const statusFilter = (req.query.status || '').trim();
+        const messFilter = (req.query.mess || '').trim();
+        const hostelFilter = (req.query.hostel || '').trim();
+        const serviceFilter = (req.query.service || '').trim();
+        const fromDueDate = (req.query.from_due_date || '').trim();
+        const toDueDate = (req.query.to_due_date || '').trim();
+        const sort = (req.query.sort || 'date_asc').trim();
+
+        const today = formatYmd(new Date());
+        const dateStamp = today;
+
+        if (type === 'billing' || statusFilter || serviceFilter || fromDueDate || toDueDate) {
+            // Billing Cycles Export
+            const filename = `filtered_billing_${(statusFilter || 'all').toLowerCase()}_${dateStamp}.csv`;
+            res.setHeader('Content-Type', 'text/csv; charset=UTF-8');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.write('\uFEFF');
+            res.write(['Student Code', 'Student Name', 'Mobile Number', 'Joining Date', 'Billing Cycle', 'Cycle Interval', 'Due Date', 'Fee Amount (INR)', 'Status', 'Payment Details', 'Room Number'].join(',') + '\r\n');
+
+            const sSnap = await db.collection('students').where('status', '==', 'ACTIVE').get();
+            let students = [];
+            sSnap.forEach(doc => students.push(doc.data()));
+
+            if (serviceFilter === 'MESS') {
+                students = students.filter(s => s.mess_status === 'ACTIVE' && s.hostel_status !== 'ACTIVE');
+            } else if (serviceFilter === 'HOSTEL') {
+                students = students.filter(s => s.hostel_status === 'ACTIVE' && s.mess_status !== 'ACTIVE');
+            } else if (serviceFilter === 'BOTH') {
+                students = students.filter(s => s.mess_status === 'ACTIVE' && s.hostel_status === 'ACTIVE');
+            }
+
+            if (search) {
+                students = students.filter(s =>
+                    (s.name && s.name.toLowerCase().includes(search)) ||
+                    (s.student_code && s.student_code.toLowerCase().includes(search)) ||
+                    (s.mobile && s.mobile.includes(search))
+                );
+            }
+
+            for (const st of students) {
+                const cycle = await getStudentCurrentCycle(st.id, today);
+                if (!cycle) continue;
+
+                const stStatus = cycle.status;
+                const daysDiff = cycle.days_diff;
+
+                if (statusFilter === 'DUE_TODAY' && stStatus !== 'DUE') continue;
+                if (statusFilter === 'OVERDUE' && stStatus !== 'OVERDUE') continue;
+                if (statusFilter === 'DUE_7_DAYS' && !(daysDiff >= 0 && daysDiff <= 7 && stStatus !== 'PENDING_VERIFICATION')) continue;
+                if (statusFilter === 'DUE_30_DAYS' && !(daysDiff >= 0 && daysDiff <= 30 && stStatus !== 'PENDING_VERIFICATION')) continue;
+                if (statusFilter === 'PENDING' && stStatus !== 'PENDING_VERIFICATION') continue;
+
+                const dueYmd = formatYmd(cycle.due_date);
+                if (fromDueDate && dueYmd < fromDueDate) continue;
+                if (toDueDate && dueYmd > toDueDate) continue;
+
+                const row = [
+                    `"${cycle.student_code}"`,
+                    `"${(cycle.student_name || '').replace(/"/g, '""')}"`,
+                    `"${st.mobile || ''}"`,
+                    `"${cycle.joining_date_formatted}"`,
+                    `"Cycle ${cycle.cycle_number}"`,
+                    `"${(cycle.cycle_label || '').replace(/"/g, '""')}"`,
+                    `"${cycle.due_date_formatted}"`,
+                    `"${cycle.amount_due}"`,
+                    `"${cycle.status_label || cycle.status}"`,
+                    `"${(cycle.days_text || '').replace(/"/g, '""')}"`,
+                    `"${st.room_no || ''}"`
+                ];
+                res.write(row.join(',') + '\r\n');
+            }
+            return res.end();
+        }
+
+        // Student Directory Export
+        const filename = `filtered_students_directory_${dateStamp}.csv`;
         res.setHeader('Content-Type', 'text/csv; charset=UTF-8');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-
-        // Excel UTF-8 BOM
         res.write('\uFEFF');
-
-        res.write(['Student Code', 'Student Name', 'Mobile Number', 'Joining Date', 'Mess Status', 'Hostel Status', 'Room Number', 'Enrolment Status', 'Record Created'].join(',') + '\r\n');
+        res.write(['Student Code', 'Student Name', 'Mobile Number', 'Joining Date', 'Mess Status', 'Hostel Status', 'Room Number', 'Enrolment Status', 'Active Cycle', 'Due Date', 'Fee Status'].join(',') + '\r\n');
 
         const snap = await db.collection('students').get();
-        const students = [];
+        let students = [];
         snap.forEach(doc => students.push(doc.data()));
-        students.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        if (search) {
+            students = students.filter(s =>
+                (s.name && s.name.toLowerCase().includes(search)) ||
+                (s.student_code && s.student_code.toLowerCase().includes(search)) ||
+                (s.mobile && s.mobile.includes(search))
+            );
+        }
+        if (messFilter) students = students.filter(s => s.mess_status === messFilter);
+        if (hostelFilter) students = students.filter(s => s.hostel_status === hostelFilter);
+
+        if (sort === 'date_desc') {
+            students.sort((a, b) => (formatYmd(b.joining_date) || '').localeCompare(formatYmd(a.joining_date) || '') || (b.id - a.id));
+        } else if (sort === 'name_asc') {
+            students.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        } else if (sort === 'name_desc') {
+            students.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+        } else {
+            students.sort((a, b) => (formatYmd(a.joining_date) || '').localeCompare(formatYmd(b.joining_date) || '') || (a.id - b.id));
+        }
 
         for (const s of students) {
+            const cycle = await getStudentCurrentCycle(s.id, today);
             const row = [
                 `"${s.student_code}"`,
                 `"${(s.name || '').replace(/"/g, '""')}"`,
@@ -387,7 +481,9 @@ router.get(['/export', '/export.php'], async (req, res) => {
                 `"${s.hostel_status}"`,
                 `"${s.room_no || ''}"`,
                 `"${s.status}"`,
-                `"${formatDisplayDate(s.created_at)}"`
+                `"${cycle ? 'Cycle ' + cycle.cycle_number : '—'}"`,
+                `"${cycle ? cycle.due_date_formatted : '—'}"`,
+                `"${cycle ? cycle.status : '—'}"`
             ];
             res.write(row.join(',') + '\r\n');
         }

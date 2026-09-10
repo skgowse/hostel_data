@@ -24,6 +24,23 @@ function debounce(func, wait) {
     };
 }
 
+// Universal CSV Exporter with UTF-8 BOM for Excel Compatibility
+function exportDataToCSV(filename, headers, rows) {
+    const csvRows = [headers.join(',')];
+    rows.forEach(r => csvRows.push(r.join(',')));
+    const csvString = csvRows.join('\r\n');
+    const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+window.exportDataToCSV = exportDataToCSV;
+
 document.addEventListener('DOMContentLoaded', function () {
     // -------------------------------------------------------------
     // 1. Dark Mode / Light Mode Theme Engine
@@ -179,11 +196,14 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(res => {
                 if (filterLoading) filterLoading.classList.add('d-none');
                 if (res.success) {
+                    window.currentFilteredDashboardStudents = res.students || [];
                     if (kpiOverdue) kpiOverdue.textContent = res.summary.overdue_count;
                     if (kpiDueToday) kpiDueToday.textContent = res.summary.due_today_count;
                     if (kpiDue7Days) kpiDue7Days.textContent = res.summary.due_7_days_count;
                     if (kpiCollected) kpiCollected.textContent = res.summary.amount_collected_formatted;
                     if (matchCountBadge) matchCountBadge.textContent = res.total_matching + ' Students';
+                    const exportCountSpan = document.getElementById('exportCountSpan');
+                    if (exportCountSpan) exportCountSpan.textContent = res.total_matching;
 
                     if (res.students && res.students.length > 0) {
                         let html = '';
@@ -475,6 +495,53 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
+        // Export Filtered Dashboard Records (Instant CSV Download)
+        function exportCurrentDashboardFilteredData() {
+            const students = window.currentFilteredDashboardStudents || [];
+            if (students.length === 0) {
+                alert('No student records found to export for the active filters.');
+                return;
+            }
+
+            const headers = [
+                '"Student Code"',
+                '"Student Name"',
+                '"Mobile Number"',
+                '"Joining Date"',
+                '"Billing Cycle"',
+                '"Cycle Interval"',
+                '"Due Date"',
+                '"Fee Amount (INR)"',
+                '"Cycle Status"',
+                '"Status Details / Payment Notes"',
+                '"Room Number"'
+            ];
+
+            const rows = students.map(st => [
+                `"${st.student_code || ''}"`,
+                `"${(st.name || '').replace(/"/g, '""')}"`,
+                `"${st.mobile || ''}"`,
+                `"${st.joining_date || ''}"`,
+                `"Cycle ${st.cycle_number || ''}"`,
+                `"${(st.cycle_label || '').replace(/"/g, '""')}"`,
+                `"${st.due_date_formatted || ''}"`,
+                `"${st.applicable_fee || 0}"`,
+                `"${st.status || ''}"`,
+                `"${(st.days_text || st.last_paid_info || '').replace(/"/g, '""')}"`,
+                `"${st.room_no || ''}"`
+            ]);
+
+            const statusVal = (ajaxStatusSelect ? ajaxStatusSelect.value : 'all').toLowerCase();
+            const dateStamp = new Date().toISOString().slice(0, 10);
+            exportDataToCSV(`filtered_student_billing_${statusVal}_${dateStamp}.csv`, headers, rows);
+        }
+
+        const exportDashBtn = document.getElementById('exportDashboardFilteredBtn');
+        if (exportDashBtn) exportDashBtn.addEventListener('click', exportCurrentDashboardFilteredData);
+
+        const exportToolbarBtn = document.getElementById('exportToolbarFilteredBtn');
+        if (exportToolbarBtn) exportToolbarBtn.addEventListener('click', exportCurrentDashboardFilteredData);
+
         fetchFilteredStudents();
     }
 
@@ -507,6 +574,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(res => {
                 if (dirSpinner) dirSpinner.classList.add('d-none');
                 if (res.success) {
+                    window.currentFilteredDirectoryStudents = res.students || [];
                     if (dirCountBadge) dirCountBadge.textContent = res.total;
 
                     if (res.students && res.students.length > 0) {
@@ -598,6 +666,50 @@ document.addEventListener('DOMContentLoaded', function () {
                 fetchDirectoryStudents();
             });
         }
+
+        // Export Filtered Student Directory Records
+        function exportCurrentDirectoryFilteredData() {
+            const students = window.currentFilteredDirectoryStudents || [];
+            if (students.length === 0) {
+                alert('No student records found to export for the active filters.');
+                return;
+            }
+
+            const headers = [
+                '"Student Code"',
+                '"Student Name"',
+                '"Mobile Number"',
+                '"Joining Date"',
+                '"Mess Status"',
+                '"Hostel Status"',
+                '"Room Number"',
+                '"Active Cycle"',
+                '"Due Date"',
+                '"Fee Status"'
+            ];
+
+            const rows = students.map(st => [
+                `"${st.student_code || ''}"`,
+                `"${(st.name || '').replace(/"/g, '""')}"`,
+                `"${st.mobile || ''}"`,
+                `"${st.joining_date_formatted || ''}"`,
+                `"${st.mess_status || ''}"`,
+                `"${st.hostel_status || ''}"`,
+                `"${st.room_no || ''}"`,
+                `"${st.cycle ? 'Cycle ' + st.cycle.cycle_number : '—'}"`,
+                `"${st.cycle ? st.cycle.due_date_formatted : '—'}"`,
+                `"${st.cycle ? st.cycle.status : '—'}"`
+            ]);
+
+            const dateStamp = new Date().toISOString().slice(0, 10);
+            exportDataToCSV(`filtered_students_directory_${dateStamp}.csv`, headers, rows);
+        }
+
+        const exportDirBtn = document.getElementById('exportDirectoryFilteredBtn');
+        if (exportDirBtn) exportDirBtn.addEventListener('click', exportCurrentDirectoryFilteredData);
+
+        const exportDirToolbarBtn = document.getElementById('exportDirectoryToolbarBtn');
+        if (exportDirToolbarBtn) exportDirToolbarBtn.addEventListener('click', exportCurrentDirectoryFilteredData);
     }
 });
 
